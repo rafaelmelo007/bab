@@ -1,0 +1,247 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v[0-9]+.[0-9]+.[0-9]+'
+      - 'v[0-9]+.[0-9]+.[0-9]+-*'
+
+permissions:
+  contents: write
+  id-token: write
+
+jobs:
+  # ── Lint + typecheck ──────────────────────────────────────────────────────
+  lint:
+    name: Lint & Typecheck
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - run: npm ci --ignore-scripts
+      - run: npm run typecheck
+
+  # ── Unit + integration tests ───────────────────────────────────────────────
+  test:
+    name: Unit & Integration Tests
+    needs: lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - run: npm ci --ignore-scripts
+      - run: npm test
+
+  # ── Security gates ─────────────────────────────────────────────────────────
+  security:
+    name: Security Gates
+    needs: lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      # T-16: lockfile gate — AC-09
+      - name: Assert lockfileVersion >= 3
+        run: node -e "
+          const lock = JSON.parse(require('fs').readFileSync('package-lock.json','utf8'));
+          if (!lock.lockfileVersion || lock.lockfileVersion < 3) {
+            console.error('lockfileVersion must be >= 3, got: ' + lock.lockfileVersion);
+            process.exit(1);
+          }
+          console.log('lockfileVersion ok: ' + lock.lockfileVersion);
+        "
+      - run: npm ci --ignore-scripts
+      # T-12: npm audit gate — AC-07
+      - name: npm audit (Moderate+ blocking)
+        run: npm audit --omit=dev --audit-level=moderate
+      # T-15: license check — AC-08, D-04
+      - name: License check
+        run: >
+          npx license-checker-rseidelsohn
+          --production
+          --failOn 'GPL-2.0;GPL-3.0;AGPL-1.0;AGPL-3.0;LGPL-2.1;LGPL-3.0;SSPL-1.0'
+
+  # ── Build + size gate ──────────────────────────────────────────────────────
+  build:
+    name: Build & Size Gate
+    needs: [test, security]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - run: npm ci --ignore-scripts
+      # T-07: engines.node release gate — AC-02
+      - name: Release gate (engines.node)
+        run: node scripts/release-gate.mjs
+      - name: Build bundle
+        run: npm run build
+      # T-05: bundle integrity check — TC-03
+      - name: Bundle integrity check
+        run: node --check bin/bab.mjs
+      # T-08: tarball size gate — AC-03
+      - name: Tarball size gate (≤ 2 MB)
+        run: node scripts/check-tarball-size.mjs
+      - uses: actions/upload-artifact@v4
+        with:
+          name: bab-bundle
+          path: bin/bab.mjs
+
+  # ── Cross-platform smoke matrix — T-22, AC-13 ─────────────────────────────
+  smoke:
+    name: Smoke (${{ matrix.os }} / Node ${{ matrix.node }})
+    needs: build
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-22.04, ubuntu-24.04, macos-13, macos-14, windows-2022]
+        node: ['20.10.0', '22', '24']
+        exclude:
+          # macos-14 runners are ARM; Node 20.10.0 pre-dates official ARM GA builds
+          - os: macos-14
+            node: '20.10.0'
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node }}
+          cache: npm
+      - run: npm ci --ignore-scripts
+      - run: npm run build
+      - name: Smoke — bab --version
+        run: node bin/bab.mjs --version
+
+  # ── Bench gate ────────────────────────────────────────────────────────────
+  bench:
+    name: Bench Gate
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - run: npm ci --ignore-scripts
+      - run: npm run bench
+
+  # ── npm publish with provenance (SLSA L2) — T-17, AC-10 ──────────────────
+  publish:
+    name: Publish to npm
+    needs: [smoke, bench]
+    runs-on: ubuntu-latest
+    environment: npm-publish
+    permissions:
+      contents: write
+      id-token: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+          registry-url: 'https://registry.npmjs.org'
+      - run: npm ci --ignore-scripts
+      - run: npm run build
+      - name: Publish (SLSA L2 provenance)
+        run: npm publish --provenance --access public
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+      # T-09: installed-footprint gate (AC-04) — runs after publish
+      - name: Installed footprint gate (≤ 8 MB)
+        run: |
+          VERSION=$(node -p "require('./package.json').version")
+          npm install -g "bab@${VERSION}"
+          SIZE=$(du -sb "$(npm root -g)/bab" | cut -f1)
+          echo "Installed size: ${SIZE} bytes (limit: 8388608)"
+          if [ "$SIZE" -gt 8388608 ]; then
+            echo "FAIL: installed size ${SIZE} > 8388608 bytes (G-06 AC-04)"
+            exit 1
+          fi
+          echo "PASS"
+
+  # ── Homebrew auto-bump — T-19, AC-11 ─────────────────────────────────────
+  homebrew-bump:
+    name: Homebrew Formula Bump
+    needs: publish
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - name: Compute tarball SHA-256
+        id: sha
+        run: |
+          VERSION="${GITHUB_REF_NAME#v}"
+          URL="https://registry.npmjs.org/bab/-/bab-${VERSION}.tgz"
+          SHA=$(curl -sL "$URL" | sha256sum | cut -d' ' -f1)
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+          echo "sha256=$SHA" >> "$GITHUB_OUTPUT"
+          echo "url=$URL" >> "$GITHUB_OUTPUT"
+      - name: Open Homebrew bump PR
+        env:
+          GH_TOKEN: ${{ secrets.HOMEBREW_PAT }}
+        run: |
+          git config --global user.email "actions@github.com"
+          git config --global user.name "github-actions[bot]"
+          gh repo clone owner/homebrew-bab /tmp/homebrew-bab
+          cd /tmp/homebrew-bab
+          sed -i "s|url \".*\"|url \"${{ steps.sha.outputs.url }}\"|" Formula/bab.rb
+          sed -i "s|sha256 \".*\"|sha256 \"${{ steps.sha.outputs.sha256 }}\"|" Formula/bab.rb
+          sed -i "s|VERSION_PLACEHOLDER|${{ steps.sha.outputs.version }}|g" Formula/bab.rb
+          git checkout -b "bump-bab-${{ steps.sha.outputs.version }}"
+          git add Formula/bab.rb
+          git commit -m "bab ${{ steps.sha.outputs.version }}"
+          git push origin "bump-bab-${{ steps.sha.outputs.version }}"
+          gh pr create --title "bab ${{ steps.sha.outputs.version }}" \
+            --body "Auto-bump from release workflow." \
+            --repo owner/homebrew-bab
+
+  # ── AUR auto-bump — T-21, AC-12 ──────────────────────────────────────────
+  aur-bump:
+    name: AUR PKGBUILD Bump
+    needs: publish
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Compute values
+        id: vals
+        run: |
+          VERSION="${GITHUB_REF_NAME#v}"
+          URL="https://registry.npmjs.org/bab/-/bab-${VERSION}.tgz"
+          SHA=$(curl -sL "$URL" | sha256sum | cut -d' ' -f1)
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+          echo "sha256=$SHA" >> "$GITHUB_OUTPUT"
+      - name: Open AUR bump PR
+        env:
+          GH_TOKEN: ${{ secrets.AUR_PAT }}
+        run: |
+          git config --global user.email "actions@github.com"
+          git config --global user.name "github-actions[bot]"
+          gh repo clone owner/aur-bab /tmp/aur-bab
+          cd /tmp/aur-bab
+          sed -i "s|pkgver=.*|pkgver=${{ steps.vals.outputs.version }}|" PKGBUILD
+          sed -i "s|SHA256_PLACEHOLDER|${{ steps.vals.outputs.sha256 }}|" PKGBUILD
+          # Regenerate .SRCINFO
+          makepkg --printsrcinfo > .SRCINFO 2>/dev/null || true
+          git checkout -b "bump-${{ steps.vals.outputs.version }}"
+          git add PKGBUILD .SRCINFO
+          git commit -m "bab ${{ steps.vals.outputs.version }}"
+          git push origin "bump-${{ steps.vals.outputs.version }}"
+          gh pr create --title "bab ${{ steps.vals.outputs.version }}" \
+            --body "Auto-bump from release workflow." \
+            --repo owner/aur-bab

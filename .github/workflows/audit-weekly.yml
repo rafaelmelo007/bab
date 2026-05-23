@@ -1,0 +1,48 @@
+name: Weekly Security Audit
+
+on:
+  schedule:
+    - cron: '0 9 * * 1'  # Every Monday 09:00 UTC
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  audit:
+    name: Low Advisory Report
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - run: npm ci --ignore-scripts
+      - name: Run audit (informational Low)
+        id: audit
+        run: |
+          npm audit --omit=dev --json > /tmp/audit.json || true
+          echo "date=$(date -u +%Y-%m-%d)" >> "$GITHUB_OUTPUT"
+      - name: Append to audit-trend.md
+        run: |
+          mkdir -p docs/security
+          DATE="${{ steps.audit.outputs.date }}"
+          VULNS=$(node -e "
+            const r = JSON.parse(require('fs').readFileSync('/tmp/audit.json','utf8'));
+            const meta = r.metadata?.vulnerabilities ?? {};
+            console.log(
+              'critical=' + (meta.critical??0) +
+              ' high=' + (meta.high??0) +
+              ' moderate=' + (meta.moderate??0) +
+              ' low=' + (meta.low??0)
+            );
+          ")
+          echo "| ${DATE} | ${VULNS} |" >> docs/security/audit-trend.md
+      - name: Commit trend update
+        run: |
+          git config user.email "actions@github.com"
+          git config user.name "github-actions[bot]"
+          git add docs/security/audit-trend.md
+          git diff --cached --quiet || git commit -m "chore: weekly audit trend ${DATE}"
+          git push
