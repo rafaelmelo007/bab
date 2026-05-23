@@ -1,0 +1,21 @@
+# OS
+.DS_Store
+Thumbs.db
+
+# Editors
+.vscode/
+.idea/
+*.swp
+*~
+
+# Claude Code transient state (would be created in adopters' repos, not here)
+.claude/.worklog-state-*.json
+
+# Local environment overrides
+.env
+.env.local
+
+# Build artifacts (none expected — this is a markdown kit)
+node_modules/
+dist/
+build/

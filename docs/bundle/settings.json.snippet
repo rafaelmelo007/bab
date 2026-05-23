@@ -1,0 +1,16 @@
+{
+  "// NOTE": "Paste the 'hooks' block below into your existing .claude/settings.json. If you don't have one, this whole file IS the settings.json. The hook script path is relative to the repo root.",
+  "hooks": {
+    "Stop": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash docs/bundle/scripts/worklog-stop-hook.sh"
+          }
+        ]
+      }
+    ]
+  }
+}
