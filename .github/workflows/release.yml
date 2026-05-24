@@ -106,12 +106,14 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-22.04, ubuntu-24.04, macos-13, macos-14, windows-2022]
+        os: [ubuntu-22.04, ubuntu-24.04, macos-14, windows-2022]
         node: ['20.10.0', '22', '24']
         exclude:
           # macos-14 runners are ARM; Node 20.10.0 pre-dates official ARM GA builds
           - os: macos-14
             node: '20.10.0'
+          # macos-13 dropped — GitHub Intel macOS runners scarce, jobs stick in queue.
+          # macos-14 (Apple Silicon) provides current macOS coverage.
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v4
