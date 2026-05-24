@@ -1,0 +1,174 @@
+Starting claude CLI version 1.2.3
+Loading configuration from ~/.claude/config.json
+Connecting to API endpoint
+Session initialized with ID sess_abc123
+Sending user message to model
+Model: claude-3-5-sonnet-20241022
+Temperature: 0.7
+Max tokens: 4096
+Request sent at 2026-05-23T10:00:00Z
+Waiting for response...
+Stream started
+Received chunk 1
+Received chunk 2
+Received chunk 3
+Stream complete
+Turn complete in 1.23s
+Total tokens: 512
+Input tokens: 50
+Output tokens: 462
+Cost estimate: $0.001
+Session saved
+Connection healthy
+TLS 1.3 negotiated
+Certificate verified
+DNS resolved in 5ms
+TCP connected in 12ms
+HTTP/2 multiplexed
+Keep-alive enabled
+Request ID: req_xyz789
+Trace ID: trace_001
+Span ID: span_001
+Log level: INFO
+Compiling request payload
+Serializing JSON body
+Content-Type: application/json
+Accept: application/json
+User-Agent: claude-cli/1.2.3
+X-Request-ID: req_abc
+Parsing response headers
+Status: 200 OK
+Response time: 980ms
+Body size: 2048 bytes
+Decompressing gzip response
+Parsing JSON response
+Extracting content array
+Content type: text
+Role: assistant
+Stop reason: end_turn
+Usage object present
+Rate limit: 100 req/min
+Rate limit remaining: 99
+Rate limit reset: 2026-05-23T10:01:00Z
+Retrying connection
+Connection attempt 1 of 3
+Timeout set to 30s
+Read timeout: 60s
+Write timeout: 10s
+Idle timeout: 300s
+Max retries: 3
+Backoff factor: 2
+Jitter: 100ms
+Cache miss
+Cache key: hash_abc123
+Cache TTL: 3600s
+Cache size: 10MB
+Evicting stale entries
+Garbage collected
+Memory usage: 45MB
+CPU usage: 2%
+Goroutines: 12
+Heap allocated: 30MB
+Stack size: 8MB
+GC pause: 1ms
+Thread count: 4
+File descriptors: 42
+Open sockets: 3
+Closed sockets: 10
+Bytes sent: 1024
+Bytes received: 2048
+Packets sent: 10
+Packets received: 20
+Errors: 0
+Warnings: 0
+Info messages: 50
+Debug messages: 200
+Trace messages: 1000
+Log file: /tmp/claude.log
+Log rotation at 10MB
+Log compression enabled
+Log retention: 7 days
+Metric: latency_ms=980
+Metric: tokens_per_sec=462
+Metric: error_rate=0.0
+Metric: success_rate=1.0
+Metric: p50_latency=800
+Metric: p95_latency=1200
+Metric: p99_latency=1500
+Event: session_start
+Event: turn_start
+Event: turn_end
+Event: session_end
+Event: config_loaded
+Event: model_selected
+Event: provider_ready
+Prompt: Hello, how are you?
+Response: I am doing well, thank you!
+Context window: 200000 tokens
+Remaining context: 199950 tokens
+Model family: claude-3
+Model version: 3-5-sonnet
+API version: 2023-06-01
+SDK version: 1.2.3
+Platform: linux/amd64
+Node version: v20.10.0
+Uptime: 120s
+Process ID: 12345
+Parent PID: 12344
+Working directory: /home/user
+Home directory: /home/user
+Config directory: /home/user/.config/bab
+Cache directory: /home/user/.cache/bab
+Data directory: /home/user/.local/share/bab
+Temp directory: /tmp
+Socket path: /tmp/claude.sock
+PID file: /tmp/claude.pid
+Lock file: /tmp/claude.lock
+State file: /home/user/.config/bab/state.toml
+History file: /home/user/.local/share/bab/history
+Plugin loaded: default
+Plugin version: 1.0.0
+Theme: default
+Color scheme: dark
+Font: monospace
+Terminal: xterm-256color
+Shell: /bin/bash
+Editor: vim
+Pager: less
+Locale: en_US.UTF-8
+Timezone: UTC
+Date format: ISO8601
+Time format: 24h
+Number format: en_US
+Currency format: USD
+List separator: comma
+Decimal separator: period
+Thousands separator: comma
+Encoding: UTF-8
+Line ending: LF
+Tab width: 2
+Indent style: spaces
+Max line length: 120
+Word wrap: enabled
+Spell check: disabled
+Auto-complete: enabled
+Syntax highlight: enabled
+Line numbers: enabled
+Code folding: enabled
+Search: enabled
+Replace: enabled
+Find next shortcut: Ctrl+G
+Find prev shortcut: Ctrl+Shift+G
+Save shortcut: Ctrl+S
+Quit shortcut: Ctrl+Q
+Help shortcut: Ctrl+H
+Settings shortcut: Ctrl+,
+New session shortcut: Ctrl+N
+Switch session shortcut: Ctrl+Tab
+Clear screen shortcut: Ctrl+L
+Exit shortcut: Ctrl+D
+Copy shortcut: Ctrl+C
+Paste shortcut: Ctrl+V
+Undo shortcut: Ctrl+Z
+Redo shortcut: Ctrl+Y
+Select all shortcut: Ctrl+A
