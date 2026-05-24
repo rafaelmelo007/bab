@@ -1,0 +1,19 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`formatProviders > snapshot: ASCII mode 1`] = `
+"PROVIDER    TRANSPORT   VERSION              STATUS
+----------------------------------------------------
+claude      exec        1.2.3                [ok]
+codex       n/a         n/a                  [x]
+gemini      exec        0.5.0                [!]
+ollama      http        0.2.0                [ok]"
+`;
+
+exports[`formatProviders > snapshot: unicode mode 1`] = `
+"PROVIDER    TRANSPORT   VERSION              STATUS
+────────────────────────────────────────────────────
+claude      exec        1.2.3                ✓
+codex       n/a         n/a                  ✗
+gemini      exec        0.5.0                ⚠
+ollama      http        0.2.0                ✓"
+`;
