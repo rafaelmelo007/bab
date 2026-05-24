@@ -37,7 +37,7 @@
     "nock": "^13.0.0",
     "node-pty": "^1.0.0",
     "tinybench": "^2.0.0",
-    "typescript": "^5.4.0",
+    "typescript": "^6.0.3",
     "vitest": "^1.0.0"
   }
 }
