@@ -25,13 +25,13 @@ export function renderPrompt(ctx: ReplContext, noColor = false): string {
   const useColor = !noColor && !process.env['NO_COLOR'] && process.stdout.isTTY === true;
 
   if (!ctx.activeProvider) {
-    return 'bab> ';
+    return 'ulm> ';
   }
 
   if (useColor) {
-    return `\x1B[1mbab (${ctx.activeProvider})>\x1B[0m `;
+    return `\x1B[1mulm (${ctx.activeProvider})>\x1B[0m `;
   }
-  return `bab (${ctx.activeProvider})> `;
+  return `ulm (${ctx.activeProvider})> `;
 }
 
 /**

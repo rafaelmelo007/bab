@@ -12,7 +12,7 @@
 | T-04 | Implement ID truncation (12 chars + `…` at position 11) and PREVIEW truncation (40 chars + `…` at position 39) | ux-specialist | High | Done | AC-02 | D-01 |
 | T-05 | Implement `LAST_USED` derivation from file mtime (`fs.statSync(file).mtime.toISOString()`), formatted RFC 3339 zulu | backend-lead | High | Done | AC-02 | D-02 |
 | T-06 | Implement PREVIEW derivation: read first user message via `fileHandle.read({ length: 4096 })` (bounded buffer per §4 Security) — first 40 NFC-normalized code points | backend-lead | High | Done | AC-13 | D-03 |
-| T-07 | Implement preview cache at `$BAB_CACHE_DIR/preview/<provider>/<id>` keyed by session-file mtime; LRU evict beyond 1000 entries | backend-lead | Medium | Done | (NFR Latency cold-cache) | D-03, D-06 |
+| T-07 | Implement preview cache at `$ULM_CACHE_DIR/preview/<provider>/<id>` keyed by session-file mtime; LRU evict beyond 1000 entries | backend-lead | Medium | Done | (NFR Latency cold-cache) | D-03, D-06 |
 | T-08 | Implement empty-list message: `No saved sessions for provider '<X>'.` (verbatim with period) | ux-specialist | High | Done | AC-03 | — |
 | T-09 | Implement missing/unreadable provider store handling: empty-list + one-line `⚠` stderr warning (D-08); never throw | backend-lead | High | Done | AC-04 | D-07, D-08 |
 | T-10 | Implement `sessionResume(ctx, args)`: validate `<id>` exists in provider's store; if yes, save via F-04 per-key API; if not, print `✗ unknown session id '<id>' for provider '<X>'.` and DO NOT mutate state | backend-lead | High | Done | AC-06, AC-07 | D-05 |
@@ -34,7 +34,7 @@
 | T-26 | Author tinybench `/sessions` benchmark: 20-row hot-FS p95 ≤ 100 ms over 1000 invocations | perf-specialist | High | Done | TC-11, AC-05 | — |
 | T-27 | Author tinybench cold-cache `/sessions` benchmark: 20-row p95 ≤ 250 ms | perf-specialist | Medium | Done | TC-12 | — |
 | T-28 | Write read-only contract test: `fs.statSync` mtime snapshot of provider-store dir before/after `/sessions` and `/resume` — identical | testing-lead | High | Done | TC-13, AC-12 | — |
-| T-29 | Write conversation-content non-leakage test: byte-count assertion that `fileHandle.read` calls bounded to 4096 bytes per session file; snapshot of bab stdout contains zero strings beyond the preview slice | security-specialist | High | Done | TC-14, AC-13 | — |
+| T-29 | Write conversation-content non-leakage test: byte-count assertion that `fileHandle.read` calls bounded to 4096 bytes per session file; snapshot of ulm stdout contains zero strings beyond the preview slice | security-specialist | High | Done | TC-14, AC-13 | — |
 | T-30 | Write concurrent test (vitest concurrent): parallel REPL `/resume` + one-shot `/new` converge through F-04 per-key merge; final state.toml well-formed | testing-lead | High | Done | TC-15 | — |
 | T-31 | Write vitest unit test for non-UTF-8 preview bytes → U+FFFD; no throw | testing-lead | Low | Done | TC-16 | — |
 | T-32 | Write vitest unit test for timestamp parse failure → mtime fallback | testing-lead | Low | Done | TC-17 | — |

@@ -2,12 +2,12 @@
  * Slash command types — F-06
  */
 
-import type { BabError } from '../errors/index.js';
+import type { UlmError } from '../errors/index.js';
 
 export type DispatchResult =
   | { kind: 'ok'; output: string }
   | { kind: 'exit'; code: number }
-  | { kind: 'error'; error: BabError }
+  | { kind: 'error'; error: UlmError }
   | { kind: 'turn'; prompt: string }; // non-slash passthrough
 
 export type Handler = (args: string[], ctx: ReplContext) => Promise<DispatchResult>;

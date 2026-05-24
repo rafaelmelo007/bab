@@ -24,7 +24,7 @@ const AWS_DENY = /^AWS_(?!REGION$)/;
 
 export function buildSanitizedEnv(): NodeJS.ProcessEnv {
   const out: NodeJS.ProcessEnv = {};
-  const propagate = (process.env['BAB_PROPAGATE_ENV'] ?? '').split(',').filter(Boolean);
+  const propagate = (process.env['ULM_PROPAGATE_ENV'] ?? '').split(',').filter(Boolean);
 
   for (const [key, value] of Object.entries(process.env)) {
     if (value === undefined) continue;

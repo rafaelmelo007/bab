@@ -31,7 +31,7 @@ jobs:
       # as the safe fallback — operators can manually unpublish if still within window)
       - name: Deprecate bad version
         run: |
-          npm deprecate "bab@${{ steps.ver.outputs.bad_version }}" \
+          npm deprecate "ulm@${{ steps.ver.outputs.bad_version }}" \
             "REVERTED: see release rollback runbook docs/runbooks/release-rollback.md"
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}

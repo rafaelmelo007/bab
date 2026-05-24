@@ -1,17 +1,17 @@
 # DB Schema — State Store
 
 **Feature:** state-store
-**Source:** docs/prds/2026-05-23-bab.md §5.2.1, §5.5.2, §5.5.4; /vskit:critique-spec state-store D-01..D-06 (2026-05-23, Node.js retrofit)
+**Source:** docs/prds/2026-05-23-ulm.md §5.2.1, §5.5.2, §5.5.4; /vskit:critique-spec state-store D-01..D-06 (2026-05-23, Node.js retrofit)
 **Last updated:** 2026-05-23
 
 > Single source of truth for `state.toml`. Schema, atomic-write contract, lockfile contract, and error-code mapping all live here per INV-1.
 
 ## §1 File layout
 
-- **Path:** `$BAB_CONFIG_DIR/state.toml` if set; else platform default:
-  - Linux: `$XDG_CONFIG_HOME/bab/state.toml` (default `~/.config/bab/state.toml`)
-  - macOS: `~/Library/Application Support/bab/state.toml`
-  - Windows: `%APPDATA%\bab\state.toml`
+- **Path:** `$ULM_CONFIG_DIR/state.toml` if set; else platform default:
+  - Linux: `$XDG_CONFIG_HOME/ulm/state.toml` (default `~/.config/ulm/state.toml`)
+  - macOS: `~/Library/Application Support/ulm/state.toml`
+  - Windows: `%APPDATA%\ulm\state.toml`
 - **Mode:** `0600` Unix; user-only NTFS DACL on Windows (set on the *parent dir* at first-run via `icacls /grant:r %USERNAME%:F /inheritance:r` per D-02; new files inherit).
 - **Lockfile:** sibling `state.toml.lock`, managed by `proper-lockfile` (D-05), inherits 0600 / user-only DACL.
 - **Migration backup:** `state.toml.v<old>.bak`.
@@ -64,8 +64,8 @@ The following top-level tables are reserved for future features and MUST be pres
 - Path: sibling `state.toml.lock`, created by `proper-lockfile.lock(file)`.
 - Unix: backed by `flock(LOCK_EX | LOCK_NB)` with periodic mtime heartbeat to detect crashed holders.
 - Windows: backed by `fs.open(O_CREAT | O_EXCL)` with same heartbeat.
-- Lockfile content: heartbeat timestamp (managed by `proper-lockfile`, not bab).
-- Stale lockfile recovery: `proper-lockfile`'s heartbeat-stale threshold (default 5 s) handles crashed holders; bab never deletes a lockfile it didn't create.
+- Lockfile content: heartbeat timestamp (managed by `proper-lockfile`, not ulm).
+- Stale lockfile recovery: `proper-lockfile`'s heartbeat-stale threshold (default 5 s) handles crashed holders; ulm never deletes a lockfile it didn't create.
 - Retry: 3 attempts × 50 ms backoff via `proper-lockfile.lock(file, { retries: { retries: 3, minTimeout: 50, maxTimeout: 50 } })` → throws `StateLocked`.
 
 ## §6 Migrations
@@ -79,7 +79,7 @@ The following top-level tables are reserved for future features and MUST be pres
 2. Copy `state.toml` → `state.toml.v<old>.bak` (`fs.copyFile` + `fs.fsync`).
 3. Write transformed content to `state.toml.tmp` via `fs.writeFile`, then `fs.fsync(tmpFd)`.
 4. `fs.rename(tmp, 'state.toml')`; `fs.fsync(parentDirFd)` on Unix.
-5. Release lock. Leave `.bak` in place; user/operator removes manually (or `bab state prune-backups` in v2 per Q-03).
+5. Release lock. Leave `.bak` in place; user/operator removes manually (or `ulm state prune-backups` in v2 per Q-03).
 
 **Partial-failure recovery on next launch:**
 - `.bak` exists AND `state.toml` parses as the OLD schema → migration crashed pre-rename; delete `.bak`, retry migration.
@@ -95,7 +95,7 @@ The following top-level tables are reserved for future features and MUST be pres
 | `schema_version` > MAX_KNOWN | `StateSchema` |
 | Lock acquisition failed after 3 retries | `StateLocked` |
 
-All thrown via F-08's `BabError` hierarchy — see [F-08 INTERFACE-CONTRACTS.md](../error-surfaces/INTERFACE-CONTRACTS.md) §1.
+All thrown via F-08's `UlmError` hierarchy — see [F-08 INTERFACE-CONTRACTS.md](../error-surfaces/INTERFACE-CONTRACTS.md) §1.
 
 ## §8 Consumer features
 

@@ -114,7 +114,7 @@ describe('runOneShot — TTY stdin / empty stdin', () => {
   afterEach(() => {
     vi.restoreAllMocks();
     Object.defineProperty(process.stdin, 'isTTY', { value: origIsTTY, configurable: true });
-    delete process.env['BAB_CONFIG_DIR'];
+    delete process.env['ULM_CONFIG_DIR'];
   });
 
   it('TTY stdin + no positional → CliNoPrompt, exit 2', async () => {
@@ -174,9 +174,9 @@ describe('runOneShot — with mocked discovery', () => {
   beforeEach(async () => {
     stderrOutput = [];
     stdoutOutput = [];
-    tmpDir = path.join(os.tmpdir(), `bab-os-${Date.now()}-${Math.random().toString(36).slice(2)}`);
+    tmpDir = path.join(os.tmpdir(), `ulm-os-${Date.now()}-${Math.random().toString(36).slice(2)}`);
     await fsp.mkdir(tmpDir, { recursive: true });
-    process.env['BAB_CONFIG_DIR'] = tmpDir;
+    process.env['ULM_CONFIG_DIR'] = tmpDir;
 
     vi.spyOn(process.stderr, 'write').mockImplementation((chunk: unknown) => {
       stderrOutput.push(typeof chunk === 'string' ? chunk : String(chunk));
@@ -191,7 +191,7 @@ describe('runOneShot — with mocked discovery', () => {
 
   afterEach(async () => {
     vi.restoreAllMocks();
-    delete process.env['BAB_CONFIG_DIR'];
+    delete process.env['ULM_CONFIG_DIR'];
     Object.defineProperty(process.stdin, 'isTTY', { value: true, configurable: true });
     await fsp.rm(tmpDir, { recursive: true, force: true }).catch(() => {});
   });
@@ -296,11 +296,11 @@ process.exit(0);
     expect(code).toBe(0);
   });
 
-  it('transport throws non-BabError → rethrows', async () => {
+  it('transport throws non-UlmError → rethrows', async () => {
     const scriptPath = path.join(tmpDir, 'throw-provider.mjs');
     await fsp.writeFile(scriptPath, `process.stdout.write('ok'); process.exit(0);`);
 
-    // Spy on ExecTransport.prototype.send to throw a non-BabError
+    // Spy on ExecTransport.prototype.send to throw a non-UlmError
     const spy = vi.spyOn(ExecTransport.prototype, 'send').mockImplementation(async function* () {
       throw new TypeError('unexpected internal error');
     });
@@ -366,9 +366,9 @@ describe('runOneShot — real discovery path (no _discoverProvider)', () => {
 
   beforeEach(async () => {
     stderrOutput = [];
-    tmpDir = path.join(os.tmpdir(), `bab-os-real-${Date.now()}-${Math.random().toString(36).slice(2)}`);
+    tmpDir = path.join(os.tmpdir(), `ulm-os-real-${Date.now()}-${Math.random().toString(36).slice(2)}`);
     await fsp.mkdir(tmpDir, { recursive: true });
-    process.env['BAB_CONFIG_DIR'] = tmpDir;
+    process.env['ULM_CONFIG_DIR'] = tmpDir;
     vi.spyOn(process.stderr, 'write').mockImplementation((chunk: unknown) => {
       stderrOutput.push(typeof chunk === 'string' ? chunk : String(chunk));
       return true;
@@ -378,7 +378,7 @@ describe('runOneShot — real discovery path (no _discoverProvider)', () => {
 
   afterEach(async () => {
     vi.restoreAllMocks();
-    delete process.env['BAB_CONFIG_DIR'];
+    delete process.env['ULM_CONFIG_DIR'];
     await fsp.rm(tmpDir, { recursive: true, force: true }).catch(() => {});
   });
 

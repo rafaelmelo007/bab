@@ -12,7 +12,7 @@ let tmpDir: string;
 let stateStore: StateStore;
 
 beforeEach(async () => {
-  tmpDir = path.join(os.tmpdir(), `bab-discovery-${Date.now()}-${Math.random().toString(36).slice(2)}`);
+  tmpDir = path.join(os.tmpdir(), `ulm-discovery-${Date.now()}-${Math.random().toString(36).slice(2)}`);
   await fsp.mkdir(tmpDir, { recursive: true });
   stateStore = await StateStore.load(tmpDir);
 });

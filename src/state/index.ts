@@ -1,6 +1,6 @@
 /**
  * State Store — F-04
- * Manages bab's persistent state in state.toml with atomic writes and cross-process locking.
+ * Manages ulm's persistent state in state.toml with atomic writes and cross-process locking.
  */
 
 import * as fs from 'node:fs';
@@ -39,22 +39,22 @@ const LOCK_RETRY_DELAY = 50; // ms
 // ─── Config dir resolution ────────────────────────────────────────────────────
 
 export function resolveConfigDir(): string {
-  if (process.env['BAB_CONFIG_DIR']) {
-    return process.env['BAB_CONFIG_DIR'];
+  if (process.env['ULM_CONFIG_DIR']) {
+    return process.env['ULM_CONFIG_DIR'];
   }
 
   if (process.platform === 'win32') {
     const appData = process.env['APPDATA'] ?? path.join(os.homedir(), 'AppData', 'Roaming');
-    return path.join(appData, 'bab');
+    return path.join(appData, 'ulm');
   }
 
   if (process.platform === 'darwin') {
-    return path.join(os.homedir(), 'Library', 'Application Support', 'bab');
+    return path.join(os.homedir(), 'Library', 'Application Support', 'ulm');
   }
 
   // Linux / other: XDG
   const xdgConfig = process.env['XDG_CONFIG_HOME'] ?? path.join(os.homedir(), '.config');
-  return path.join(xdgConfig, 'bab');
+  return path.join(xdgConfig, 'ulm');
 }
 
 // ─── Minimal initial state ────────────────────────────────────────────────────

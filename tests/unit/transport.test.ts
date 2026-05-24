@@ -22,14 +22,14 @@ describe('buildSanitizedEnv — env denylist', () => {
     process.env['AWS_REGION'] = 'us-east-1';
     process.env['GOOGLE_APPLICATION_CREDENTIALS'] = '/path/to/creds.json';
     process.env['NORMAL_VAR'] = 'normal-value';
-    delete process.env['BAB_PROPAGATE_ENV'];
+    delete process.env['ULM_PROPAGATE_ENV'];
   });
 
   afterEach(() => {
     // Clean up
     for (const key of ['MY_API_KEY', 'OPENAI_TOKEN', 'DB_SECRET', 'ADMIN_PASSWORD',
       'AWS_ACCESS_KEY_ID', 'AWS_SECRET_ACCESS_KEY', 'AWS_REGION',
-      'GOOGLE_APPLICATION_CREDENTIALS', 'NORMAL_VAR', 'BAB_PROPAGATE_ENV']) {
+      'GOOGLE_APPLICATION_CREDENTIALS', 'NORMAL_VAR', 'ULM_PROPAGATE_ENV']) {
       delete process.env[key];
     }
   });
@@ -79,8 +79,8 @@ describe('buildSanitizedEnv — env denylist', () => {
     expect(env['NORMAL_VAR']).toBe('normal-value');
   });
 
-  it('BAB_PROPAGATE_ENV allowlist bypasses denylist', () => {
-    process.env['BAB_PROPAGATE_ENV'] = 'MY_API_KEY,OPENAI_TOKEN';
+  it('ULM_PROPAGATE_ENV allowlist bypasses denylist', () => {
+    process.env['ULM_PROPAGATE_ENV'] = 'MY_API_KEY,OPENAI_TOKEN';
     const env = buildSanitizedEnv();
     expect(env['MY_API_KEY']).toBe('secret-api-key');
     expect(env['OPENAI_TOKEN']).toBe('secret-token');
@@ -91,7 +91,7 @@ describe('ExecTransport — with real subprocess', () => {
   let tmpDir: string;
 
   beforeEach(async () => {
-    tmpDir = path.join(os.tmpdir(), `bab-transport-${Date.now()}-${Math.random().toString(36).slice(2)}`);
+    tmpDir = path.join(os.tmpdir(), `ulm-transport-${Date.now()}-${Math.random().toString(36).slice(2)}`);
     await fsp.mkdir(tmpDir, { recursive: true });
   });
 
@@ -180,7 +180,7 @@ describe('ExecTransport — edge cases', () => {
   let tmpDir: string;
 
   beforeEach(async () => {
-    tmpDir = path.join(os.tmpdir(), `bab-transport-edge-${Date.now()}-${Math.random().toString(36).slice(2)}`);
+    tmpDir = path.join(os.tmpdir(), `ulm-transport-edge-${Date.now()}-${Math.random().toString(36).slice(2)}`);
     await fsp.mkdir(tmpDir, { recursive: true });
   });
 

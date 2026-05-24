@@ -1,11 +1,11 @@
 {
-  "name": "bab",
+  "name": "ulm",
   "version": "0.1.0",
   "description": "Unified CLI gateway to Claude, Codex, Gemini, and Ollama",
   "type": "module",
   "license": "(MIT OR Apache-2.0)",
   "bin": {
-    "bab": "bin/bab.mjs"
+    "ulm": "bin/ulm.mjs"
   },
   "files": [
     "bin",

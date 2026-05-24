@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 // D-07: Stub provider for cold-install harness (AC-06).
-// Echoes a canned response within 50 ms to isolate bab onboarding latency.
-// Invoked by bab as: node bab-stub-provider.mjs [args...]
+// Echoes a canned response within 50 ms to isolate ulm onboarding latency.
+// Invoked by ulm as: node ulm-stub-provider.mjs [args...]
 //
 // ACP protocol subset: reads JSON frames from stdin, writes JSON frames to stdout.
 // For cold-install purposes, any input produces one content frame then a done frame.

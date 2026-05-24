@@ -517,7 +517,7 @@ vertical-slices-md-dev-kit/
 └── case-studies/
     ├── README.md                      ← what counts as a case study
     ├── 01-self-adoption.md            ← the kit scores its own market-readiness
-    └── 02-bab-bootstrap.md            ← (placeholder) first external adoption
+    └── 02-ulm-bootstrap.md            ← (placeholder) first external adoption
 ```
 
 ## What "ready to adopt" means

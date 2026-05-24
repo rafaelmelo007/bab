@@ -17,7 +17,7 @@
 | D-07 | 2026-05-23 | security-specialist | Argv quoting on Windows | Always use `child_process.spawn(cmd, args, { shell: false })` (default). Never use `{ shell: true }` for prompt content. CI grep on `src/transport/`, `src/spawn/`, `src/oneshot/` blocks `shell: true`. | Prevents accidental injection via prompt containing `"`, `\`, `&`, `|` on Windows. `spawn` with `shell: false` calls `CreateProcessW` directly with argv array, bypassing shell interpretation. | SPEC §3 AC-02, AC-18 | — |
 | D-08 | 2026-05-23 | backend-lead | ACP framing library | Build a thin in-tree `src/transport/acp/frame.ts` module (length-prefixed JSON-RPC reader/writer ~150 lines) rather than pulling a JSON-RPC npm package. Tested against captured frames in `tests/fixtures/acp-corpus/`. | Most npm JSON-RPC packages assume HTTP/WebSocket transport; ACP framing is small and stable enough to own. Avoids a dep on the install-footprint budget. | SPEC §5.1.2 stdio framing | — |
 | D-09 | 2026-05-23 | security-specialist | Where does stderr get redacted? | F-08 owns `redact.scrub`; transport calls it on every stderr line before yielding `TokenEvent { kind: 'stderr', text }`. Stream consumers receive redacted text only. | Single redaction point; can't be bypassed by a future caller. | SPEC §3 AC-15; TC-20 | — |
-| D-10 | 2026-05-23 | backend-lead | Concurrent `send()` policy | One in-flight `send()` per transport instance; second throws `TransportBusy`. Caller (F-01 REPL) is responsible for serialization. | Matches §7.1 "1 subprocess per provider per bab process"; simpler than internal queue. | SPEC §4 Concurrency NFR; AC-16 | — |
+| D-10 | 2026-05-23 | backend-lead | Concurrent `send()` policy | One in-flight `send()` per transport instance; second throws `TransportBusy`. Caller (F-01 REPL) is responsible for serialization. | Matches §7.1 "1 subprocess per provider per ulm process"; simpler than internal queue. | SPEC §4 Concurrency NFR; AC-16 | — |
 | D-11 | 2026-05-23 | backend-lead | Cross-platform process-tree kill | Use `tree-kill` npm package (~3 KB, no native deps) for `cancel()` on Windows; `process.kill(pid, signal)` on Unix is sufficient. | Node's built-in `process.kill` does not signal child trees on Windows; provider CLIs may spawn helper processes (e.g. `npm` wrappers) that need to die too. | SPEC §4 Cancellation NFR; AC-08 | — |
 
 ## Deferred Items
@@ -26,7 +26,7 @@
 |----|------|--------------|--------------|
 | DEF-01 | PTY/vt100 screen-scraping transport | PRD Q-02 explicitly defers until PRE-01/02 force it | PRE-02 resolves and at least one provider lacks both ACP and clean `-p` |
 | DEF-02 | Daemon socket transport implementation | PRD §9 — v2 only. v1 only needs the trait seam (AC-17 + TC-19) | v2 planning |
-| DEF-03 | ACP authoring — owning the spec | bab consumes upstream ACP, doesn't author framing rules | If upstream ACP fragments or stalls |
+| DEF-03 | ACP authoring — owning the spec | ulm consumes upstream ACP, doesn't author framing rules | If upstream ACP fragments or stalls |
 | DEF-04 | Multi-subprocess-per-provider (parallel turns) | §7.1 spawn cap of 1 | v2 daemon mode |
 | DEF-05 | Connection pooling for Ollama HTTP | v1: new `fetch` per turn is fine (localhost, sub-ms connect) | Profile shows connect overhead > 2 ms p95 |
 | DEF-06 | Pluggable redaction patterns per transport | F-08 owns global pattern list; no transport-specific patterns yet | Telemetry shows transport-specific leak class |

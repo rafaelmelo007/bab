@@ -61,7 +61,7 @@ function checkForbiddenFields(data: Record<string, unknown>): void {
 
 // ─── Disclosure text ─────────────────────────────────────────────────────────
 
-export const DISCLOSURE_TEXT = `bab collects anonymous usage telemetry to help improve the tool.
+export const DISCLOSURE_TEXT = `ulm collects anonymous usage telemetry to help improve the tool.
 
 What is collected:
   - CLI command names and provider names
@@ -85,34 +85,34 @@ Do you want to enable telemetry? [y/N] `;
 // ─── Cache dir ────────────────────────────────────────────────────────────────
 
 function resolveCacheDir(): string {
-  if (process.env['BAB_CACHE_DIR']) {
-    return process.env['BAB_CACHE_DIR'];
+  if (process.env['ULM_CACHE_DIR']) {
+    return process.env['ULM_CACHE_DIR'];
   }
   if (process.platform === 'win32') {
     const localAppData = process.env['LOCALAPPDATA'] ?? path.join(process.env['USERPROFILE'] ?? '', 'AppData', 'Local');
-    return path.join(localAppData, 'bab');
+    return path.join(localAppData, 'ulm');
   }
   if (process.platform === 'darwin') {
-    return path.join(process.env['HOME'] ?? '~', 'Library', 'Caches', 'bab');
+    return path.join(process.env['HOME'] ?? '~', 'Library', 'Caches', 'ulm');
   }
   const xdgCache = process.env['XDG_CACHE_HOME'] ?? path.join(process.env['HOME'] ?? '~', '.cache');
-  return path.join(xdgCache, 'bab');
+  return path.join(xdgCache, 'ulm');
 }
 
 // ─── Telemetry endpoint ───────────────────────────────────────────────────────
 
-const TELEMETRY_ENDPOINT: HttpsUrl = 'https://telemetry.bab.dev/v1/events';
+const TELEMETRY_ENDPOINT: HttpsUrl = 'https://telemetry.ulm.dev/v1/events';
 
 // ─── State ────────────────────────────────────────────────────────────────────
 
-let _isDev = process.env['NODE_ENV'] === 'development' || process.env['BAB_DEV'] === '1';
+let _isDev = process.env['NODE_ENV'] === 'development' || process.env['ULM_DEV'] === '1';
 
 /**
  * Emit a telemetry event (non-blocking, ≤1ms return).
  */
 export function emit(name: string, data: Record<string, unknown>): void {
   // Check if telemetry is blocked
-  if (process.env['BAB_NO_TELEMETRY']) return;
+  if (process.env['ULM_NO_TELEMETRY']) return;
 
   // In dev, validate event name strictly
   if (_isDev && !isAllowedEvent(name)) {

@@ -89,14 +89,14 @@ jobs:
         run: npm run build
       # T-05: bundle integrity check — TC-03
       - name: Bundle integrity check
-        run: node --check bin/bab.mjs
+        run: node --check bin/ulm.mjs
       # T-08: tarball size gate — AC-03
       - name: Tarball size gate (≤ 2 MB)
         run: node scripts/check-tarball-size.mjs
       - uses: actions/upload-artifact@v4
         with:
-          name: bab-bundle
-          path: bin/bab.mjs
+          name: ulm-bundle
+          path: bin/ulm.mjs
 
   # ── Cross-platform smoke matrix — T-22, AC-13 ─────────────────────────────
   smoke:
@@ -120,8 +120,8 @@ jobs:
           cache: npm
       - run: npm ci --ignore-scripts
       - run: npm run build
-      - name: Smoke — bab --version
-        run: node bin/bab.mjs --version
+      - name: Smoke — ulm --version
+        run: node bin/ulm.mjs --version
 
   # ── Bench gate ────────────────────────────────────────────────────────────
   bench:
@@ -163,8 +163,8 @@ jobs:
       - name: Installed footprint gate (≤ 8 MB)
         run: |
           VERSION=$(node -p "require('./package.json').version")
-          npm install -g "bab@${VERSION}"
-          SIZE=$(du -sb "$(npm root -g)/bab" | cut -f1)
+          npm install -g "ulm@${VERSION}"
+          SIZE=$(du -sb "$(npm root -g)/ulm" | cut -f1)
           echo "Installed size: ${SIZE} bytes (limit: 8388608)"
           if [ "$SIZE" -gt 8388608 ]; then
             echo "FAIL: installed size ${SIZE} > 8388608 bytes (G-06 AC-04)"
@@ -187,7 +187,7 @@ jobs:
         id: sha
         run: |
           VERSION="${GITHUB_REF_NAME#v}"
-          URL="https://registry.npmjs.org/bab/-/bab-${VERSION}.tgz"
+          URL="https://registry.npmjs.org/ulm/-/ulm-${VERSION}.tgz"
           SHA=$(curl -sL "$URL" | sha256sum | cut -d' ' -f1)
           echo "version=$VERSION" >> "$GITHUB_OUTPUT"
           echo "sha256=$SHA" >> "$GITHUB_OUTPUT"
@@ -198,18 +198,18 @@ jobs:
         run: |
           git config --global user.email "actions@github.com"
           git config --global user.name "github-actions[bot]"
-          gh repo clone owner/homebrew-bab /tmp/homebrew-bab
-          cd /tmp/homebrew-bab
-          sed -i "s|url \".*\"|url \"${{ steps.sha.outputs.url }}\"|" Formula/bab.rb
-          sed -i "s|sha256 \".*\"|sha256 \"${{ steps.sha.outputs.sha256 }}\"|" Formula/bab.rb
-          sed -i "s|VERSION_PLACEHOLDER|${{ steps.sha.outputs.version }}|g" Formula/bab.rb
-          git checkout -b "bump-bab-${{ steps.sha.outputs.version }}"
-          git add Formula/bab.rb
-          git commit -m "bab ${{ steps.sha.outputs.version }}"
-          git push origin "bump-bab-${{ steps.sha.outputs.version }}"
-          gh pr create --title "bab ${{ steps.sha.outputs.version }}" \
+          gh repo clone owner/homebrew-ulm /tmp/homebrew-ulm
+          cd /tmp/homebrew-ulm
+          sed -i "s|url \".*\"|url \"${{ steps.sha.outputs.url }}\"|" Formula/ulm.rb
+          sed -i "s|sha256 \".*\"|sha256 \"${{ steps.sha.outputs.sha256 }}\"|" Formula/ulm.rb
+          sed -i "s|VERSION_PLACEHOLDER|${{ steps.sha.outputs.version }}|g" Formula/ulm.rb
+          git checkout -b "bump-ulm-${{ steps.sha.outputs.version }}"
+          git add Formula/ulm.rb
+          git commit -m "ulm ${{ steps.sha.outputs.version }}"
+          git push origin "bump-ulm-${{ steps.sha.outputs.version }}"
+          gh pr create --title "ulm ${{ steps.sha.outputs.version }}" \
             --body "Auto-bump from release workflow." \
-            --repo owner/homebrew-bab
+            --repo owner/homebrew-ulm
 
   # ── AUR auto-bump — T-21, AC-12 ──────────────────────────────────────────
   aur-bump:
@@ -222,7 +222,7 @@ jobs:
         id: vals
         run: |
           VERSION="${GITHUB_REF_NAME#v}"
-          URL="https://registry.npmjs.org/bab/-/bab-${VERSION}.tgz"
+          URL="https://registry.npmjs.org/ulm/-/ulm-${VERSION}.tgz"
           SHA=$(curl -sL "$URL" | sha256sum | cut -d' ' -f1)
           echo "version=$VERSION" >> "$GITHUB_OUTPUT"
           echo "sha256=$SHA" >> "$GITHUB_OUTPUT"
@@ -232,16 +232,16 @@ jobs:
         run: |
           git config --global user.email "actions@github.com"
           git config --global user.name "github-actions[bot]"
-          gh repo clone owner/aur-bab /tmp/aur-bab
-          cd /tmp/aur-bab
+          gh repo clone owner/aur-ulm /tmp/aur-ulm
+          cd /tmp/aur-ulm
           sed -i "s|pkgver=.*|pkgver=${{ steps.vals.outputs.version }}|" PKGBUILD
           sed -i "s|SHA256_PLACEHOLDER|${{ steps.vals.outputs.sha256 }}|" PKGBUILD
           # Regenerate .SRCINFO
           makepkg --printsrcinfo > .SRCINFO 2>/dev/null || true
           git checkout -b "bump-${{ steps.vals.outputs.version }}"
           git add PKGBUILD .SRCINFO
-          git commit -m "bab ${{ steps.vals.outputs.version }}"
+          git commit -m "ulm ${{ steps.vals.outputs.version }}"
           git push origin "bump-${{ steps.vals.outputs.version }}"
-          gh pr create --title "bab ${{ steps.vals.outputs.version }}" \
+          gh pr create --title "ulm ${{ steps.vals.outputs.version }}" \
             --body "Auto-bump from release workflow." \
-            --repo owner/aur-bab
+            --repo owner/aur-ulm

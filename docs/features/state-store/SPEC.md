@@ -6,14 +6,14 @@
 **Touches:** [src/state/**]
 **Prototype:** N/A
 **Agents:** backend-lead, db-architect, security-specialist, testing-lead
-**Source:** docs/prds/2026-05-23-bab.md §6 — F-04; §5.2.1, §5.5, §7.4
+**Source:** docs/prds/2026-05-23-ulm.md §6 — F-04; §5.2.1, §5.5, §7.4
 **Last updated:** 2026-05-23
 
 ---
 
 ## §1 Problem Statement
 
-bab stores user prefs and session IDs in `~/.config/bab/state.toml` (or platform equivalent). This feature owns that file: its schema, its atomic-write contract, its OS-level lockfile, its `0600` file mode, schema-version migrations with `.bak` rollback, and the per-key read-modify-write merge that lets a REPL and a one-shot run concurrently without losing each other's session writes. The store is what G-08 "zero credential surface" and the §5.5 "bab itself stores no conversation content" promises sit on top of.
+ulm stores user prefs and session IDs in `~/.config/ulm/state.toml` (or platform equivalent). This feature owns that file: its schema, its atomic-write contract, its OS-level lockfile, its `0600` file mode, schema-version migrations with `.bak` rollback, and the per-key read-modify-write merge that lets a REPL and a one-shot run concurrently without losing each other's session writes. The store is what G-08 "zero credential surface" and the §5.5 "ulm itself stores no conversation content" promises sit on top of.
 
 ## §2 Scope
 
@@ -25,13 +25,13 @@ bab stores user prefs and session IDs in `~/.config/bab/state.toml` (or platform
 - Retry contention: 3 attempts × 50 ms backoff → throws `StateLocked` (F-08 D-02 coalesces the print).
 - Schema migrations in `src/state/migrate.ts`; `.bak` snapshot before each migration; recovery on partial failure per DBSCHEMA `## Migrations`.
 - File-mode enforcement: `0600` on Unix (throws `Perms` if more permissive); Windows ACL set at *creation* via `fs.open` with explicit mode + post-open `icacls` shrink (D-02 — Node's `fs.open` does not accept Win32 `SECURITY_ATTRIBUTES` directly; mitigation is to create the file in a private parent directory and rely on inheritance).
-- Platform config dirs per §7.4; `BAB_CONFIG_DIR` override via `process.env`.
+- Platform config dirs per §7.4; `ULM_CONFIG_DIR` override via `process.env`.
 - TOML library: `@iarna/toml` v3 for unknown-key + comment preservation (D-01).
 
 ### Out of Scope
 - Conversation content — explicit non-goal (PRD §5.5.1).
 - Provider-side session storage layout (`~/.claude/projects/`, etc.) — read by F-05, not owned here.
-- Telemetry cache `~/.cache/bab/telemetry.jsonl` — owned by F-10 in the cache dir, not the config dir.
+- Telemetry cache `~/.cache/ulm/telemetry.jsonl` — owned by F-10 in the cache dir, not the config dir.
 - Discovery probe logic — F-03 writes its results through this store but does not own the schema.
 - Encryption-at-rest — DEF-01 (no credentials in this file by design).
 
@@ -50,9 +50,9 @@ bab stores user prefs and session IDs in `~/.config/bab/state.toml` (or platform
 - [ ] AC-09: Schema migration round-trip — a v0 → v1 migration (placeholder; first real migration is the test fixture) copies the original to `state.toml.v0.bak`, writes the transformed file via tmp + rename, preserves unknown keys across the transform.
 - [ ] AC-10: Migration partial-failure recovery — injected fault between rename and follow-up step: next `StateStore.load()` detects the `.bak`, restores it over `state.toml`, prints a one-line `⚠ migration rolled back from <bak>` warning. Lockfile is held across the restore.
 - [ ] AC-11: Unix mode enforcement — loading a `state.toml` with mode `0640`, `0644`, `0660`, or `0777` throws `Perms` and does not parse or rewrite the file. Mode `0600` and `0400` load successfully. Skipped on Windows.
-- [ ] AC-12: Windows DACL enforcement — on Windows, `state.toml` created by bab grants Full Control to the current user SID only; `BUILTIN\Users` and `Everyone` are absent. Verified via `icacls` parse. Implementation: file is created inside the bab config dir whose own DACL was set user-only at first-run via `mkdir` + `icacls /grant:r %USERNAME%:F /inheritance:r`; the file inherits.
+- [ ] AC-12: Windows DACL enforcement — on Windows, `state.toml` created by ulm grants Full Control to the current user SID only; `BUILTIN\Users` and `Everyone` are absent. Verified via `icacls` parse. Implementation: file is created inside the ulm config dir whose own DACL was set user-only at first-run via `mkdir` + `icacls /grant:r %USERNAME%:F /inheritance:r`; the file inherits.
 - [ ] AC-13: Corruption surfaces clean error — truncated file, malformed TOML, missing `schema_version`, non-integer `schema_version` each throw `StateCorrupt` with the path in the message. No partial state exposed to callers.
-- [ ] AC-14: Config-dir resolution — `BAB_CONFIG_DIR` overrides all platform defaults; absent, the resolver returns the §7.4 platform default. Tested with each env-var permutation.
+- [ ] AC-14: Config-dir resolution — `ULM_CONFIG_DIR` overrides all platform defaults; absent, the resolver returns the §7.4 platform default. Tested with each env-var permutation.
 
 ## §4 Non-Functional Requirements
 
@@ -95,12 +95,12 @@ Schema lives in [DBSCHEMA.md](./DBSCHEMA.md) — single source of truth per INV-
 | TC-13 | Integration | Lockfile leak test | After 100 sequential writes (incl. one throwing writer), no stale lockfile |
 | TC-14 | Integration | Migration with unknown keys at every level | Round-trip preserves unknowns; `.bak` matches pre-migration byte-for-byte |
 | TC-15 | Integration | Migration partial-failure injection | Next launch restores from `.bak`, prints warning, succeeds |
-| TC-16 | Integration | `BAB_CONFIG_DIR` override | Reads / writes target the override path |
+| TC-16 | Integration | `ULM_CONFIG_DIR` override | Reads / writes target the override path |
 | TC-17 | Property (fast-check) | Random valid TOML + arbitrary unknown keys, write then re-read | Known fields equal; unknown keys equal |
 
 ## §8 Cross-References
 
-- **PRD:** docs/prds/2026-05-23-bab.md §6 — F-04; §5.2.1, §5.5, §7.4
+- **PRD:** docs/prds/2026-05-23-ulm.md §6 — F-04; §5.2.1, §5.5, §7.4
 - **Decisions:** [DECISIONS.md](./DECISIONS.md)
 - **DB Schema:** [DBSCHEMA.md](./DBSCHEMA.md)
 - **Tasks:** [TASKS.md](./TASKS.md)
@@ -112,14 +112,14 @@ Schema lives in [DBSCHEMA.md](./DBSCHEMA.md) — single source of truth per INV-
 |---|----------|-------|--------|------------|
 | Q-01 | TOML library — `@iarna/toml` vs `smol-toml` vs `js-toml`? | backend-lead | Resolved (2026-05-23) | `@iarna/toml` v3 — unknown-key preservation + active maintenance per D-01. |
 | Q-02 | Lockfile behavior on NFS / SMB where flock semantics are weak | backend-lead | Open | `proper-lockfile` uses `flock` + an mtime-based heuristic; detect non-local FS via `fs.statfs` (Node 18.15+) and surface one-line warning. Resolve by first GitHub issue reporting flock-on-NFS misbehavior, or v1+1 quarter. |
-| Q-03 | Auto-delete `state.toml.v<old>.bak` after N launches? | db-architect | Open | Keep forever in v1 (cheap, aids debugging); add `bab state prune-backups` in v2. Resolve by v1 release. |
+| Q-03 | Auto-delete `state.toml.v<old>.bak` after N launches? | db-architect | Open | Keep forever in v1 (cheap, aids debugging); add `ulm state prune-backups` in v2. Resolve by v1 release. |
 | Q-04 | Windows atomic-rename semantics (`MoveFileEx` open-handle blocking) | testing-lead | Open | TC-09/TC-10 must be re-validated on Windows; surface as known limitation if open handles block rename. |
 
 ## §10 Implementation Notes
 
 - The per-key merge inside the write lock is the linchpin of the "REPL plus parallel one-shot" concurrency story (PRD §5.2.1). Whole-file overwrite would silently drop one writer's session ID.
 - D-01 (`@iarna/toml`) is non-negotiable for AC-07: most other Node TOML libs lose unknown keys on serialize. `@iarna/toml` is the only widely-used one that preserves the full document tree including comments.
-- D-02 (Windows ACL via parent-dir DACL inheritance) is a Node-shaped workaround: Node's `fs.open` doesn't accept Win32 `SECURITY_ATTRIBUTES`, so the canonical "set ACL at file creation" pattern isn't available. Mitigation: set the DACL on the bab config dir at first-run via `icacls /grant:r %USERNAME%:F /inheritance:r` (or the PowerShell `Set-Acl` equivalent), and rely on inheritance for new files inside. This is the supported Node idiom.
+- D-02 (Windows ACL via parent-dir DACL inheritance) is a Node-shaped workaround: Node's `fs.open` doesn't accept Win32 `SECURITY_ATTRIBUTES`, so the canonical "set ACL at file creation" pattern isn't available. Mitigation: set the DACL on the ulm config dir at first-run via `icacls /grant:r %USERNAME%:F /inheritance:r` (or the PowerShell `Set-Acl` equivalent), and rely on inheritance for new files inside. This is the supported Node idiom.
 - D-03 (fsync parent dir) is required on Unix because POSIX rename ordering is not implied. On Windows, `fs.rename` calls `MoveFileEx` which has different durability semantics; the dir-fsync step is a no-op and that's fine.
 - D-05 (lockfile staleness via `proper-lockfile`'s mtime heartbeat) avoids PID-reuse races that a manual stale-PID recovery would have. The package is purpose-built for this.
 - Tooling note: `@iarna/toml` is pure JS, ~70 KB packed. `proper-lockfile` is pure JS, ~20 KB. Both well under the install-footprint budget (PRD G-06).

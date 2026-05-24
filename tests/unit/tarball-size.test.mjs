@@ -10,7 +10,7 @@ function parseTarballSize(jsonOutput) {
 
 describe('tarball size gate', () => {
   it('returns integer for well-formed pack JSON', () => {
-    const fixture = JSON.stringify([{ name: 'bab', size: 1234567, files: [] }]);
+    const fixture = JSON.stringify([{ name: 'ulm', size: 1234567, files: [] }]);
     expect(parseTarballSize(fixture)).toBe(1234567);
   });
 

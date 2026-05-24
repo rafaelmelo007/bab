@@ -20,7 +20,7 @@ export async function main(argv: string[] = process.argv): Promise<number> {
   const program = new Command();
 
   program
-    .name('bab')
+    .name('ulm')
     .description('Unified CLI gateway to Claude, Codex, Gemini, and Ollama')
     .option('-p, --provider <name>', 'Provider to use (claude, codex, gemini, ollama)')
     .option('--no-color', 'Disable ANSI color output')

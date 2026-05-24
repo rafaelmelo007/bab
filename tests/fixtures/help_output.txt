@@ -1,4 +1,4 @@
-bab — unified CLI gateway to Claude, Codex, Gemini, and Ollama
+ulm — unified CLI gateway to Claude, Codex, Gemini, and Ollama
 
 Commands:
   /help                Show this help message
@@ -9,6 +9,6 @@ Commands:
   /resume <id>         Resume a saved session by ID
   /new                 Start a new session (clears current session ID)
   /clear               Clear the screen
-  /exit                Exit bab
+  /exit                Exit ulm
 
 Type any non-command text to send a prompt to the active provider.

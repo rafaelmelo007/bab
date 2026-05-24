@@ -12,7 +12,7 @@ Field reports from real uses of the bundle. Each case study answers four questio
 | # | Title | Adopter | Window | Outcome |
 |---|---|---|---|---|
 | [01](./01-self-adoption.md) | The bundle scores its own market-readiness | bundle author (Rafael Melo, via Claude Code) | 2026-05-23, single session | 5.4 → 7.6 composite on an 11-dim market-readiness rubric; 7 files shipped |
-| [02](./02-bab-bootstrap.md) | *(placeholder)* `bab` CLI adopts the bundle | Rafael Melo / `bab` repo | — | not yet started |
+| [02](./02-ulm-bootstrap.md) | *(placeholder)* `ulm` CLI adopts the bundle | Rafael Melo / `ulm` repo | — | not yet started |
 
 ## How to add a case study
 

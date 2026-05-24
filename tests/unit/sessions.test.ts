@@ -23,7 +23,7 @@ function makeCtx(overrides?: Partial<ReplContext>): ReplContext {
 }
 
 beforeEach(async () => {
-  tmpDir = path.join(os.tmpdir(), `bab-sessions-${Date.now()}-${Math.random().toString(36).slice(2)}`);
+  tmpDir = path.join(os.tmpdir(), `ulm-sessions-${Date.now()}-${Math.random().toString(36).slice(2)}`);
   await fsp.mkdir(tmpDir, { recursive: true });
   stateStore = await StateStore.load(tmpDir);
 });

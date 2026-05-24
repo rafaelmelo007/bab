@@ -13,7 +13,7 @@ import { StateCorrupt, StateSchema, Perms } from '../../src/errors/index.js';
 let tmpDir: string;
 
 beforeEach(async () => {
-  tmpDir = path.join(os.tmpdir(), `bab-test-state-${Date.now()}-${Math.random().toString(36).slice(2)}`);
+  tmpDir = path.join(os.tmpdir(), `ulm-test-state-${Date.now()}-${Math.random().toString(36).slice(2)}`);
   await fsp.mkdir(tmpDir, { recursive: true });
 });
 
@@ -212,7 +212,7 @@ describe('resolveConfigDir', () => {
 
   afterEach(() => {
     // Restore env vars
-    for (const key of ['BAB_CONFIG_DIR', 'XDG_CONFIG_HOME', 'APPDATA']) {
+    for (const key of ['ULM_CONFIG_DIR', 'XDG_CONFIG_HOME', 'APPDATA']) {
       if (origEnv[key] !== undefined) {
         process.env[key] = origEnv[key];
       } else {
@@ -221,17 +221,17 @@ describe('resolveConfigDir', () => {
     }
   });
 
-  it('AC-14: BAB_CONFIG_DIR overrides everything', () => {
-    process.env['BAB_CONFIG_DIR'] = '/custom/bab/config';
-    expect(resolveConfigDir()).toBe('/custom/bab/config');
+  it('AC-14: ULM_CONFIG_DIR overrides everything', () => {
+    process.env['ULM_CONFIG_DIR'] = '/custom/ulm/config';
+    expect(resolveConfigDir()).toBe('/custom/ulm/config');
   });
 
   it('AC-14: falls back to platform default when not set', () => {
-    delete process.env['BAB_CONFIG_DIR'];
+    delete process.env['ULM_CONFIG_DIR'];
     const dir = resolveConfigDir();
     expect(dir).toBeTruthy();
     expect(dir.length).toBeGreaterThan(0);
-    // Should end with 'bab'
-    expect(path.basename(dir)).toBe('bab');
+    // Should end with 'ulm'
+    expect(path.basename(dir)).toBe('ulm');
   });
 });

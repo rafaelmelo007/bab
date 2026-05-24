@@ -7,5 +7,5 @@
 > | Var | Read by | Default | Source |
 > |-----|---------|---------|--------|
 > | `NO_COLOR` | repl-shell | unset | `repl-shell` SPEC §4 Accessibility row |
-> | `BAB_CONFIG_DIR` | (TBD) state loader | platform default (`~/.config/bab` / `%APPDATA%\bab`) | PRD §5.5.2 |
+> | `ULM_CONFIG_DIR` | (TBD) state loader | platform default (`~/.config/ulm` / `%APPDATA%\ulm`) | PRD §5.5.2 |
 > | `PATH` | provider discovery | inherited | PRD §5.4 |

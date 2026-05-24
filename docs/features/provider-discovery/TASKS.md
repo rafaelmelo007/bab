@@ -33,12 +33,12 @@
 | T-25 | Write `/providers` golden-file tests (4-ready / 4-mixed / 0-providers, with + without NO_COLOR) | testing-lead | High | Done | TC-04 | — |
 | T-26 | Write first-run welcome golden-file tests (3-detected + zero-detected variants) | testing-lead | High | Done | TC-05 | — |
 | T-27 | Build mock-PATH integration harness with 4 fake binaries (Unix shell scripts, Windows `.cmd` files); assert all 4 detected in ≤ 1500 ms on ubuntu-latest | testing-lead | High | Done | TC-06 | — |
-| T-28 | Write integration test asserting 500 ms probe timeout: mock binary sleeps 600 ms → probe aborted, provider recorded as `✗ —`, bab continues | testing-lead | High | Done | TC-07 | — |
+| T-28 | Write integration test asserting 500 ms probe timeout: mock binary sleeps 600 ms → probe aborted, provider recorded as `✗ —`, ulm continues | testing-lead | High | Done | TC-07 | — |
 | T-29 | Write integration test proving parallelism (4 × 400 ms binaries finish in ≤ 700 ms total) | testing-lead | High | Done | TC-08 | D-02 |
 | T-30 | Write integration tests for cached-path-missing (TC-09), SHA-mismatch (TC-10), version-skew (TC-11), symlink (TC-12) | testing-lead | Medium | Done | TC-09..TC-12 | — |
 | T-31 | Write integration test for Ollama daemon-down: binary exists, port unreachable → `⚠`, surfaced in `/providers` | testing-lead | Medium | Done | TC-13 | — |
 | T-32 | Write integration test for below-minimum ollama (0.1.19): `ProviderVersion` thrown once per session | testing-lead | Medium | Done | TC-14 | D-07 |
-| T-33 | Write node-pty E2E test for full bab launch on fixture PATH, send first prompt, verify routing | testing-lead | Low | Done | TC-15 | — |
+| T-33 | Write node-pty E2E test for full ulm launch on fixture PATH, send first prompt, verify routing | testing-lead | Low | Done | TC-15 | — |
 
 **Status values:** Pending → In Progress → In Review → Done
 **Decision column:** `D-NN` slug from DECISIONS.md when the task only exists because of a critique decision; `—` otherwise.

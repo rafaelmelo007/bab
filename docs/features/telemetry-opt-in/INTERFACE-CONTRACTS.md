@@ -1,24 +1,24 @@
 # Interface Contracts — Telemetry Opt-In
 
 **Feature:** telemetry-opt-in
-**Source:** docs/prds/2026-05-23-bab.md §10.2, §10.3; /vskit:critique-spec D-01..D-09 (2026-05-23, Node.js retrofit)
+**Source:** docs/prds/2026-05-23-ulm.md §10.2, §10.3; /vskit:critique-spec D-01..D-09 (2026-05-23, Node.js retrofit)
 **Last updated:** 2026-05-23
 
 > Single source of truth for the telemetry endpoint payload, local-cache format, state.toml `[telemetry]` block ownership boundary, and the verbatim user-facing disclosure text. Per INV-1, none of these live elsewhere.
 
 ## §1 Endpoint
 
-- **URL:** `https://telemetry.bab.<TBD per PRD Q-08>/v1/event`
+- **URL:** `https://telemetry.ulm.<TBD per PRD Q-08>/v1/event`
 - **Build-time constant** in `src/telemetry/endpoint.ts`:
   ```ts
-  export const TELEMETRY_URL: `https://${string}` = "https://telemetry.bab.example/v1/event";
+  export const TELEMETRY_URL: `https://${string}` = "https://telemetry.ulm.example/v1/event";
   ```
   TypeScript narrow type prevents accidental `http://`. Per D-04, no runtime override (anti-exfiltration).
 - **Method:** `POST`
 - **Auth:** none (anonymous)
 - **Transport:** HTTPS-only; TLS 1.2+; cert-chain validation enforced (Node `fetch` default).
 - **Body:** single JSON object per event (see §3 below).
-- **Request headers:** `Content-Type: application/json`, `User-Agent: bab/<version>`. No cookies, no `Authorization`, no custom auth headers ever.
+- **Request headers:** `Content-Type: application/json`, `User-Agent: ulm/<version>`. No cookies, no `Authorization`, no custom auth headers ever.
 - **Request body byte cap:** 4 KB. Larger events refused at serialization time (defensive — current allowlist cannot exceed this).
 - **Response:** `204 No Content` on success; any non-2xx ⇒ event re-queued to local cache.
 
@@ -36,7 +36,7 @@ type Event = {
   timestamp:   string;   // RFC3339 UTC ms precision, regex /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/
   anon_id:     string;   // 32-char lowercase hex, regex /^[0-9a-f]{32}$/
   os:          "linux" | "macos" | "windows";  // FreeBSD/etc → "linux" per D-05
-  bab_version: string;   // semver, regex /^\d+\.\d+\.\d+(-[a-z0-9.]+)?$/
+  ulm_version: string;   // semver, regex /^\d+\.\d+\.\d+(-[a-z0-9.]+)?$/
   event_name:  AllowedEventName;
   event_data:  AllowedEventData[AllowedEventName];  // per-event allowlist below
 };
@@ -63,19 +63,19 @@ Hyphens in §4.8 codes converted to underscores on emit (per D-09):
 
 ## §6 Local-cache file format
 
-- **Path:** `$BAB_CACHE_DIR/telemetry.jsonl` (default: `~/.cache/bab/telemetry.jsonl`, platform equivalents per §7.4).
+- **Path:** `$ULM_CACHE_DIR/telemetry.jsonl` (default: `~/.cache/ulm/telemetry.jsonl`, platform equivalents per §7.4).
 - **Format:** newline-delimited JSON; one event object per line, same schema as the POST body.
 - **Lifecycle:** append on emit; drained by background sender on next successful POST. Drain SLO: ≥ 95% drained within 24 h of network availability (§10.3).
 - **Cap:** 5 MB FIFO trim, oldest events first (D-03).
 - **Permissions:** mode `0600` Unix; inside user-only-DACL config dir on Windows.
-- **Local-only mode (`bab telemetry local`):** events written here only; never transmitted.
+- **Local-only mode (`ulm telemetry local`):** events written here only; never transmitted.
 
 ## §7 state.toml additions (owned by F-04 reserved section)
 
 ```toml
 [telemetry]
-enabled = true                                  # set by `bab telemetry enable`
-anon_id = "0123456789abcdef0123456789abcdef"    # 128-bit hex; regenerated on `bab reset` (D-07 zero-overwrite)
+enabled = true                                  # set by `ulm telemetry enable`
+anon_id = "0123456789abcdef0123456789abcdef"    # 128-bit hex; regenerated on `ulm reset` (D-07 zero-overwrite)
 mode    = "remote"                              # "remote" | "local" | "off" (D-08 tri-state)
 ```
 
@@ -83,24 +83,24 @@ mode    = "remote"                              # "remote" | "local" | "off" (D-
 
 ## §8 Kill switches
 
-- `BAB_NO_TELEMETRY=1` env var (any non-empty value other than `0`/`false`) — overrides everything: no events emitted, no local cache touched, no sockets opened.
-- `bab telemetry disable` — purges cache, sets `enabled = false`, sets `mode = "off"`, zeroes `anon_id` (D-07).
+- `ULM_NO_TELEMETRY=1` env var (any non-empty value other than `0`/`false`) — overrides everything: no events emitted, no local cache touched, no sockets opened.
+- `ulm telemetry disable` — purges cache, sets `enabled = false`, sets `mode = "off"`, zeroes `anon_id` (D-07).
 
 ## §9 User-facing disclosure
 
-Verbatim text printed by `bab telemetry enable` before the confirmation prompt (source of truth: `tests/telemetry/enable_output.txt`; reproduced here for documentation parity, fixture is authoritative):
+Verbatim text printed by `ulm telemetry enable` before the confirmation prompt (source of truth: `tests/telemetry/enable_output.txt`; reproduced here for documentation parity, fixture is authoritative):
 
 ```
-bab telemetry is OPT-IN and OFF BY DEFAULT.
+ulm telemetry is OPT-IN and OFF BY DEFAULT.
 
-If you opt in, bab will send anonymous events to:
-  https://telemetry.bab.<endpoint>/v1/event
+If you opt in, ulm will send anonymous events to:
+  https://telemetry.ulm.<endpoint>/v1/event
 
 These events ARE sent:
   - install         (first-run signal)
   - run_start       (process started, discovery latency)
   - provider_set    (which provider, no prompt content)
-  - turn_complete   (provider + transport + ok/error/cancelled + bab overhead ms)
+  - turn_complete   (provider + transport + ok/error/cancelled + ulm overhead ms)
   - error_<CODE>    (one of the documented error codes)
   - crash           (process crashed signal, no stack trace in v1)
 
@@ -111,13 +111,13 @@ These are NEVER sent:
   - file paths            (no /home/... or C:\... ever)
   - env var values        (no API keys, no tokens, no secrets)
 
-A random 128-bit ID identifies your installation; rotate with: bab reset
+A random 128-bit ID identifies your installation; rotate with: ulm reset
 
-You can stop telemetry at any time with: bab telemetry disable
-You can override config with the env var: BAB_NO_TELEMETRY=1
+You can stop telemetry at any time with: ulm telemetry disable
+You can override config with the env var: ULM_NO_TELEMETRY=1
 
 To continue and enable telemetry, type 'yes' below.
 Anything else cancels.
 
-Enable bab telemetry? [yes/no]:
+Enable ulm telemetry? [yes/no]:
 ```

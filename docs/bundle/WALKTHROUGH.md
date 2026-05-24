@@ -710,7 +710,7 @@ $ /vskit:health-check
   GET http://localhost:3000/health        200 OK   (12ms)
   GET http://localhost:5432/health        N/A      (postgres direct check)
   postgres: 1 connection, 0 locks
-  bab CLI: not deployed (this repo is server-side)
+  ulm CLI: not deployed (this repo is server-side)
 
 All dependencies healthy.
 ```

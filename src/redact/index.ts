@@ -20,7 +20,7 @@ function parseExtraPatterns(): RegExp[] {
   if (_extraParsed) return _extraPatterns;
   _extraParsed = true;
 
-  const raw = process.env['BAB_REDACT_EXTRA'];
+  const raw = process.env['ULM_REDACT_EXTRA'];
   if (!raw) return (_extraPatterns = []);
 
   const patterns: RegExp[] = [];
@@ -31,7 +31,7 @@ function parseExtraPatterns(): RegExp[] {
       patterns.push(new RegExp(trimmed, 'g'));
     } catch {
       // Invalid regex: warn once, skip
-      process.stderr.write(`[bab] BAB_REDACT_EXTRA: invalid regex pattern skipped: ${trimmed}\n`);
+      process.stderr.write(`[ulm] ULM_REDACT_EXTRA: invalid regex pattern skipped: ${trimmed}\n`);
     }
   }
   return (_extraPatterns = patterns);

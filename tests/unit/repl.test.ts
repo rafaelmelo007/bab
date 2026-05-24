@@ -40,16 +40,16 @@ describe('renderPrompt', () => {
     vi.restoreAllMocks();
   });
 
-  it('no provider → "bab> "', () => {
+  it('no provider → "ulm> "', () => {
     const ctx = makeCtx();
     const prompt = renderPrompt(ctx, true);
-    expect(prompt).toBe('bab> ');
+    expect(prompt).toBe('ulm> ');
   });
 
-  it('with provider → "bab (claude)> "', () => {
+  it('with provider → "ulm (claude)> "', () => {
     const ctx = makeCtx({ activeProvider: 'claude' });
     const prompt = renderPrompt(ctx, true);
-    expect(stripAnsi(prompt)).toBe('bab (claude)> ');
+    expect(stripAnsi(prompt)).toBe('ulm (claude)> ');
   });
 
   it('NO_COLOR env → no ANSI in prompt', () => {
@@ -64,7 +64,7 @@ describe('renderPrompt', () => {
     const ctx = makeCtx({ activeProvider: 'claude' });
     const prompt = renderPrompt(ctx, true);
     expect(prompt).toBe(stripAnsi(prompt));
-    expect(stripAnsi(prompt)).toBe('bab (claude)> ');
+    expect(stripAnsi(prompt)).toBe('ulm (claude)> ');
   });
 
   it('no provider prompt ends with "> "', () => {
@@ -133,7 +133,7 @@ describe('runReplLoop — with mock readline interface', () => {
   let stateStore: StateStore;
 
   beforeEach(async () => {
-    tmpDir = path.join(os.tmpdir(), `bab-repl-${Date.now()}-${Math.random().toString(36).slice(2)}`);
+    tmpDir = path.join(os.tmpdir(), `ulm-repl-${Date.now()}-${Math.random().toString(36).slice(2)}`);
     await fsp.mkdir(tmpDir, { recursive: true });
     stateStore = await StateStore.load(tmpDir);
   });
@@ -400,7 +400,7 @@ describe('runReplLoop — with mock readline interface', () => {
     expect(combined).toContain('hello from transport');
   }, 5000);
 
-  it('turn result + transport throws BabError → formats to stderr', async () => {
+  it('turn result + transport throws UlmError → formats to stderr', async () => {
     const mockRl = makeMockRl();
     const ctx = makeCtxForRepl({ activeProvider: 'claude' });
 
@@ -418,11 +418,11 @@ describe('runReplLoop — with mock readline interface', () => {
       version: '1.0.0',
     });
 
-    // Throw a BabError-shaped object (has format method)
+    // Throw a UlmError-shaped object (has format method)
     vi.spyOn(ExecTransport.prototype, 'send').mockImplementationOnce(async function* () {
-      const err = Object.assign(new Error('transport BabError'), {
+      const err = Object.assign(new Error('transport UlmError'), {
         exitCode: () => 1,
-        format: (_opts: unknown) => 'formatted bab error',
+        format: (_opts: unknown) => 'formatted ulm error',
       });
       throw err;
     });
@@ -438,7 +438,7 @@ describe('runReplLoop — with mock readline interface', () => {
     const code = await runPromise;
     expect(code).toBe(0);
     const combined = stderrLines.join('');
-    expect(combined).toContain('formatted bab error');
+    expect(combined).toContain('formatted ulm error');
   }, 5000);
 
   it('turn result + transport throws plain Error → writes string to stderr', async () => {
@@ -482,14 +482,14 @@ describe('runRepl — calls StateStore.load', () => {
   let tmpDir: string;
 
   beforeEach(async () => {
-    tmpDir = path.join(os.tmpdir(), `bab-runrepl-${Date.now()}-${Math.random().toString(36).slice(2)}`);
+    tmpDir = path.join(os.tmpdir(), `ulm-runrepl-${Date.now()}-${Math.random().toString(36).slice(2)}`);
     await fsp.mkdir(tmpDir, { recursive: true });
-    process.env['BAB_CONFIG_DIR'] = tmpDir;
+    process.env['ULM_CONFIG_DIR'] = tmpDir;
   });
 
   afterEach(async () => {
     vi.restoreAllMocks();
-    delete process.env['BAB_CONFIG_DIR'];
+    delete process.env['ULM_CONFIG_DIR'];
     try {
       await fsp.rm(tmpDir, { recursive: true, force: true });
     } catch {

@@ -21,7 +21,7 @@ const __dirname = path.dirname(url.fileURLToPath(import.meta.url));
 
 // ─── Help text ────────────────────────────────────────────────────────────────
 
-const HELP_TEXT = `bab — unified CLI gateway to Claude, Codex, Gemini, and Ollama
+const HELP_TEXT = `ulm — unified CLI gateway to Claude, Codex, Gemini, and Ollama
 
 Commands:
   /help                Show this help message
@@ -32,7 +32,7 @@ Commands:
   /resume <id>         Resume a saved session by ID
   /new                 Start a new session (clears current session ID)
   /clear               Clear the screen
-  /exit                Exit bab
+  /exit                Exit ulm
 
 Type any non-command text to send a prompt to the active provider.
 `;

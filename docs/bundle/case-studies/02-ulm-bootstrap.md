@@ -1,17 +1,17 @@
-# Case Study 02 — `bab` CLI adopts the bundle
+# Case Study 02 — `ulm` CLI adopts the bundle
 
 **Status:** placeholder — adoption not yet started.
 
-**Adopter:** Rafael Melo / `bab` repo (the CLI gateway, not the bundle author hat)
+**Adopter:** Rafael Melo / `ulm` repo (the CLI gateway, not the bundle author hat)
 **Date:** *to be filled when the work happens*
 
 ---
 
 ## Why this case study exists
 
-The `bab` repo (this repo) contains both the bundle and the `bab` CLI product. The CLI has a PRD (`prd-bab.md`) and zero implementation. It is a fresh greenfield repo — the exact shape the bundle's recommended persona ("solo dev / staff eng on greenfield AI repos") describes.
+The `ulm` repo (this repo) contains both the bundle and the `ulm` CLI product. The CLI has a PRD (`prd-ulm.md`) and zero implementation. It is a fresh greenfield repo — the exact shape the bundle's recommended persona ("solo dev / staff eng on greenfield AI repos") describes.
 
-Adopting the bundle on `bab` produces:
+Adopting the bundle on `ulm` produces:
 
 1. **Real evidence** of the bundle running on a real (single-user) repo, not a worked example.
 2. **A second case study**, lifting Proof from 3 → ~6.
@@ -19,7 +19,7 @@ Adopting the bundle on `bab` produces:
 
 ## Pre-adoption state (snapshot 2026-05-23)
 
-- `prd-bab.md` exists at repo root, ~13 KB, scoped to a product PRD.
+- `prd-ulm.md` exists at repo root, ~13 KB, scoped to a product PRD.
 - No `docs/PRD.md`, no `docs/features/`, no `docs/worklog/`.
 - No `CLAUDE.md` §Commands section yet.
 - No Stop hook wired.
@@ -47,7 +47,7 @@ Adopting the bundle on `bab` produces:
 
 ## What this case study is NOT
 
-- Not a "look, it works" piece. The bundle's own §5.3 forces a *drop* decision after two consecutive weekly token-budget breaches. If `bab` adopts the bundle and it breaches, the case study records that and ends with a drop, not with a save.
+- Not a "look, it works" piece. The bundle's own §5.3 forces a *drop* decision after two consecutive weekly token-budget breaches. If `ulm` adopts the bundle and it breaches, the case study records that and ends with a drop, not with a save.
 - Not a generic testimonial. Case studies are evidence, not endorsements.
 
 ---

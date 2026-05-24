@@ -1,5 +1,5 @@
 /**
- * bab — Unified CLI gateway to Claude, Codex, Gemini, and Ollama
+ * ulm — Unified CLI gateway to Claude, Codex, Gemini, and Ollama
  * Entry point — wires F-07 (one-shot) and F-03 (repl-shell).
  */
 

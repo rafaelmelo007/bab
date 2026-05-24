@@ -6,14 +6,14 @@
 **Touches:** [src/sessions/**]
 **Prototype:** N/A
 **Agents:** backend-lead, ux-specialist, testing-lead
-**Source:** docs/prds/2026-05-23-bab.md §6 — F-05; §5.5.2, §5.5.3, §4.5, §4.9.1, §3.2 PRE-03
+**Source:** docs/prds/2026-05-23-ulm.md §6 — F-05; §5.5.2, §5.5.3, §4.5, §4.9.1, §3.2 PRE-03
 **Last updated:** 2026-05-23
 
 ---
 
 ## §1 Problem Statement
 
-Each provider CLI keeps its own per-conversation session storage (`~/.claude/projects/`, similar for codex/gemini). bab's promise in PRD §5.5.2 is to track the last session ID per provider so the next bab launch resumes where the user left off — and to let the user explicitly start fresh (`/new`), list recent sessions (`/sessions`), or jump back into a specific one (`/resume <id>`). This feature implements those three commands, the per-provider session-store readers, and the `/sessions` output format from §4.9.1. It stores ID strings only — never conversation content (G-02, §5.5.1).
+Each provider CLI keeps its own per-conversation session storage (`~/.claude/projects/`, similar for codex/gemini). ulm's promise in PRD §5.5.2 is to track the last session ID per provider so the next ulm launch resumes where the user left off — and to let the user explicitly start fresh (`/new`), list recent sessions (`/sessions`), or jump back into a specific one (`/resume <id>`). This feature implements those three commands, the per-provider session-store readers, and the `/sessions` output format from §4.9.1. It stores ID strings only — never conversation content (G-02, §5.5.1).
 
 ## §2 Scope
 
@@ -21,7 +21,7 @@ Each provider CLI keeps its own per-conversation session storage (`~/.claude/pro
 - `/new` — clears `[sessions].<provider>.id` (sets to empty string per D-04) via F-04 atomic write per-key callback; next turn invokes the provider without `--resume`.
 - `/sessions` — lists up to 20 most-recently-used session IDs for the current provider, formatted per §4.9.1 (ID 12, LAST_USED 20, PREVIEW 40, sorted newest first, fixed-width columns).
 - `/resume <id>` — validates `<id>` exists in the provider's store; if yes, writes `[sessions].<provider>.id = <id>` via F-04; next turn invokes provider with `--resume <id>` (D-05).
-- Per-provider session-store readers (read-only): walk each provider CLI's storage path to enumerate IDs + `LAST_USED` (file mtime per D-02) + first-user-message preview (first 40 bytes per D-03, cached at `$BAB_CACHE_DIR/preview/<provider>/<id>` keyed by session-file mtime per D-06).
+- Per-provider session-store readers (read-only): walk each provider CLI's storage path to enumerate IDs + `LAST_USED` (file mtime per D-02) + first-user-message preview (first 40 bytes per D-03, cached at `$ULM_CACHE_DIR/preview/<provider>/<id>` keyed by session-file mtime per D-06).
 - Empty-list rendering: `No saved sessions for provider 'X'.` (verbatim).
 - Warning channel: provider store unreadable / layout changed → empty-list + one-line `⚠` warning on stderr (D-07, D-08).
 - ID display truncation with `…` (U+2026) at position 11; PREVIEW truncated with `…` at position 39 (D-01).
@@ -29,10 +29,10 @@ Each provider CLI keeps its own per-conversation session storage (`~/.claude/pro
 
 ### Out of Scope
 - Cross-provider session merging — explicit non-goal (§5.5.3).
-- Conversation content storage in bab — explicit non-goal (§5.5.1).
+- Conversation content storage in ulm — explicit non-goal (§5.5.1).
 - The `/pipe` v2 candidate (§15) for moving context between providers.
 - The state.toml schema itself — owned by F-04.
-- Provider CLI's own session-management commands (e.g. `claude --list-sessions`) — bab reads the on-disk store directly; if a provider changes its layout, `/sessions` and `/resume` break for that provider until bab is updated (PRD §5.5.2 + PRE-03).
+- Provider CLI's own session-management commands (e.g. `claude --list-sessions`) — ulm reads the on-disk store directly; if a provider changes its layout, `/sessions` and `/resume` break for that provider until ulm is updated (PRD §5.5.2 + PRE-03).
 - Per-provider store path discovery + format — DEF-01 (depends on PRE-03 outcome; each provider's on-disk layout is an undocumented internal contract).
 
 ## §3 Acceptance Criteria
@@ -48,8 +48,8 @@ Each provider CLI keeps its own per-conversation session storage (`~/.claude/pro
 - [ ] AC-09: `/new` clears `[sessions].<provider>.id` (sets to empty string `""` per D-04 — schema is fixed-shape per §5.5.2) via F-04 atomic write. The next turn invokes the provider with no `--resume` flag.
 - [ ] AC-10: `/new`, `/sessions`, `/resume` are no-ops with an explanatory `NoProvider` error when no provider is selected.
 - [ ] AC-11: Switching providers (`/provider gemini` after `/provider claude`) then running `/sessions` returns gemini's sessions only — no Claude IDs leak (§5.5.3 verified).
-- [ ] AC-12: bab never writes into any provider's session-store directory during `/sessions` or `/resume`. Test asserts via mtime snapshot of the fixture store before/after.
-- [ ] AC-13: `/sessions` output contains **no** conversation content beyond the 40-char first-user-message preview; the body of the conversation is never read into bab's process memory beyond the preview line (G-02 / §5.5.1). Enforced by reading provider files with an explicit byte cap (`fs.read` with `length: 4096`).
+- [ ] AC-12: ulm never writes into any provider's session-store directory during `/sessions` or `/resume`. Test asserts via mtime snapshot of the fixture store before/after.
+- [ ] AC-13: `/sessions` output contains **no** conversation content beyond the 40-char first-user-message preview; the body of the conversation is never read into ulm's process memory beyond the preview line (G-02 / §5.5.1). Enforced by reading provider files with an explicit byte cap (`fs.read` with `length: 4096`).
 
 ## §4 Non-Functional Requirements
 
@@ -60,7 +60,7 @@ Each provider CLI keeps its own per-conversation session storage (`~/.claude/pro
 | Browser support | N/A |
 | Quota enforcement | N/A |
 | Accessibility | Fixed-width columns; PREVIEW truncated with `…` (UTF-8) or `...` (ASCII fallback per §4.7); no information conveyed only by color; screen-reader output: each row read as `id <ID>, last used <LAST_USED>, preview <PREVIEW>`. |
-| Security | Read-only access to provider stores (`fs.open` with `'r'` mode); ID strings + timestamps + 40-byte preview slice only; conversation content never copied into bab process memory beyond the preview cap; bounded byte buffer (`fs.read` with `length: 4096` max per file). |
+| Security | Read-only access to provider stores (`fs.open` with `'r'` mode); ID strings + timestamps + 40-byte preview slice only; conversation content never copied into ulm process memory beyond the preview cap; bounded byte buffer (`fs.read` with `length: 4096` max per file). |
 | Concurrency | `/new` and `/resume` go through F-04 per-key save via `stateStore.save(state => state.sessions[provider].id = ...)`; never whole-file overwrite. |
 | Compatibility | Provider-store readers tolerate timestamp parsing failure (fall back to file mtime via `fs.stat`) and non-UTF-8 preview bytes (replace with U+FFFD via `TextDecoder('utf-8', { fatal: false })`, do not throw). |
 | Portability | Pure JS — `node:fs`, `node:path`. Runs on Node `^20.10 \|\| ^22 \|\| ^24` per PRD §7.4. |
@@ -90,14 +90,14 @@ Each provider CLI keeps its own per-conversation session storage (`~/.claude/pro
 | TC-11 | Bench (tinybench) | 20-row hot-FS render | p95 ≤ 100 ms over 1000 invocations on `ubuntu-latest` |
 | TC-12 | Bench | 20-row cold-cache render | p95 ≤ 250 ms |
 | TC-13 | Security | Read-only contract | Provider-store dir mtimes before/after `/sessions` and `/resume` identical (`fs.statSync`) |
-| TC-14 | Security | Conversation-content non-leakage | Byte-count assertion: `fs.read` calls bounded to 4096 bytes per session file; snapshot of bab stdout contains zero strings present in the session body beyond the preview slice |
+| TC-14 | Security | Conversation-content non-leakage | Byte-count assertion: `fs.read` calls bounded to 4096 bytes per session file; snapshot of ulm stdout contains zero strings present in the session body beyond the preview slice |
 | TC-15 | Concurrency | Parallel REPL `/resume` + one-shot `/new` (vitest concurrent) | Both writes converge through F-04 per-key merge; final state.toml is well-formed and reflects the later of the two |
 | TC-16 | Unit | Non-UTF-8 bytes in a session preview | Replaced with U+FFFD via `TextDecoder`; no throw |
 | TC-17 | Unit | Timestamp parse failure in a session file | Falls back to file mtime; row still rendered |
 
 ## §8 Cross-References
 
-- **PRD:** docs/prds/2026-05-23-bab.md §6 — F-05; §5.5.2, §4.5, §4.9.1
+- **PRD:** docs/prds/2026-05-23-ulm.md §6 — F-05; §5.5.2, §4.5, §4.9.1
 - **Decisions:** [DECISIONS.md](./DECISIONS.md)
 - **Tasks:** [TASKS.md](./TASKS.md)
 - **Blocked-by:** [provider-transport, state-store]

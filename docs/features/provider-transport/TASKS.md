@@ -10,10 +10,10 @@
 | T-02 | Define `TokenEvent` discriminated union: `{ kind: 'content', text } \| { kind: 'stderr', text } \| { kind: 'meta', frame }` | backend-lead | High | Done | AC-01 | D-01 |
 | T-03 | Scaffold `src/spawn/index.ts` shared helper exporting `spawnProvider(absolutePath, args, opts)` — single source of truth for env denylist + argv-only enforcement | security-specialist | High | Done | AC-02, AC-03 | D-02 |
 | T-04 | Implement env denylist in `src/spawn/index.ts`: strip `*_API_KEY`, `*_TOKEN`, `*_SECRET`, `*_PASSWORD`, `AWS_*` (except `AWS_REGION`), `GOOGLE_APPLICATION_CREDENTIALS` before `child_process.spawn` | security-specialist | High | Done | AC-03 | D-02 |
-| T-05 | Implement `BAB_PROPAGATE_ENV` allowlist override; single log line per session on activation; `BAB_PROPAGATE_ENV=*` per-turn warning | security-specialist | High | Done | AC-04 | — |
+| T-05 | Implement `ULM_PROPAGATE_ENV` allowlist override; single log line per session on activation; `ULM_PROPAGATE_ENV=*` per-turn warning | security-specialist | High | Done | AC-04 | — |
 | T-06 | Add CI grep rule blocking `spawn("sh"\|"bash"\|"cmd"\|"powershell"\|"pwsh", ...)` and `shell: true` in `src/transport/`, `src/spawn/`, `src/oneshot/` | security-specialist | High | Done | AC-02 | D-07 |
-| T-07 | Scaffold `src/transport/exec.ts` implementing `ExecTransport` per the interface; spawn via `bab-spawn` helper; stdout via `readline.createInterface` (line-by-line UTF-8) | backend-lead | High | Done | AC-01, AC-02 | — |
-| T-08 | Implement exec timeout: `AbortController` + `setTimeout(BAB_TURN_TIMEOUT*1000)`; default 60s; signal + SIGTERM + SIGKILL escalation per §4.7 | backend-lead | High | Done | AC-05 | — |
+| T-07 | Scaffold `src/transport/exec.ts` implementing `ExecTransport` per the interface; spawn via `ulm-spawn` helper; stdout via `readline.createInterface` (line-by-line UTF-8) | backend-lead | High | Done | AC-01, AC-02 | — |
+| T-08 | Implement exec timeout: `AbortController` + `setTimeout(ULM_TURN_TIMEOUT*1000)`; default 60s; signal + SIGTERM + SIGKILL escalation per §4.7 | backend-lead | High | Done | AC-05 | — |
 | T-09 | Implement mid-stream crash handling: child exits non-zero → AsyncIterable throws `TransportCrashed { exitCode, partial: true }`; partial stdout already streamed | backend-lead | High | Done | AC-09 | — |
 | T-10 | Wire F-08 redactor: `redact.scrub(line)` on every stderr line before yielding `TokenEvent { kind: 'stderr', text }` | security-specialist | High | Done | AC-15 | D-09 |
 | T-11 | Scaffold `src/transport/acp/index.ts` implementing `AcpTransport` (persistent subprocess, JSON-RPC over stdio) | backend-lead | High | Done | AC-01 | — |
@@ -27,7 +27,7 @@
 | T-19 | Add `tree-kill` (^1) dep to package.json for cross-platform process-tree signaling on Windows | backend-lead | High | Done | AC-08 | D-11 |
 | T-20 | Implement SIGINT → 500 ms → SIGTERM → 500 ms → SIGKILL escalation (≤ 1.6 s total) via `tree-kill` on Windows, `process.kill` on Unix | backend-lead | High | Done | AC-08 | D-11 |
 | T-21 | Scaffold `src/pid/index.ts` exporting `processStartTime(pid): Promise<number>`; per-OS impl: Linux `/proc/<pid>/stat` field 22; macOS `ps -p <pid> -o lstart=`; Windows `wmic process where (ProcessId=<pid>) get CreationDate` | backend-lead | High | Done | AC-11 | D-06 |
-| T-22 | Implement PID-marker file in `$BAB_CACHE_DIR/pids/<provider>.pid` containing `<pid>\t<start_time>`; on startup reap only if start-time matches | backend-lead | High | Done | AC-11, AC-12 | D-06 |
+| T-22 | Implement PID-marker file in `$ULM_CACHE_DIR/pids/<provider>.pid` containing `<pid>\t<start_time>`; on startup reap only if start-time matches | backend-lead | High | Done | AC-11, AC-12 | D-06 |
 | T-23 | Implement REPL-exit cleanup: kill all warm ACP children, remove PID-marker files within 1s | backend-lead | High | Done | AC-12 | — |
 | T-24 | Implement transport factory reading capability matrix from F-04 state.toml (`[providers.<name>].transport`); never re-detect mid-session | backend-lead | High | Done | AC-13 | — |
 | T-25 | Implement concurrent-send guard: one in-flight `send()` per transport instance; second call throws `TransportBusy` | backend-lead | Medium | Done | AC-16 | D-10 |
@@ -42,7 +42,7 @@
 | T-34 | Write mock-peer integration tests: ACP handshake (TC-07), keepalive count (TC-08), silent kill (TC-09), long think with pings (TC-10) | testing-lead | High | Done | TC-07..TC-10 | — |
 | T-35 | Write `nock` integration tests for Ollama happy path (TC-11) + refused (TC-12) | testing-lead | High | Done | TC-11, TC-12 | — |
 | T-36 | Write integration test for Ctrl-C escalation timing (SIGINT/SIGTERM/SIGKILL at 0/500/1000 ms ± 50 ms) | testing-lead | High | Done | TC-13 | — |
-| T-37 | Write integration test for PID-reuse defense: fake stale PID-marker for current shell PID with old start-time; bab does NOT kill current shell | testing-lead | High | Done | TC-15 | D-06 |
+| T-37 | Write integration test for PID-reuse defense: fake stale PID-marker for current shell PID with old start-time; ulm does NOT kill current shell | testing-lead | High | Done | TC-15 | D-06 |
 | T-38 | Write integration test for concurrent send: second `send()` throws `TransportBusy` | testing-lead | Medium | Done | TC-16 | D-10 |
 | T-39 | Wire `tinybench` deps + author `tests/bench/transport_overhead.ts` (≥ 1000 samples, p50/p95/p99 + CI bands) | perf-specialist | High | Done | AC-14, TC-17, TC-18 | D-05 |
 | T-40 | Write integration test asserting stub `DaemonSocketTransport` compiles and all ACs pass when factory swaps to it | testing-lead | Medium | Done | TC-19, AC-17 | — |

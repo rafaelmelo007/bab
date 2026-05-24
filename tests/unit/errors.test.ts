@@ -3,7 +3,7 @@
  */
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import {
-  BabError,
+  UlmError,
   RenderOpts,
   resolveRenderOpts,
   CliMissing,
@@ -27,7 +27,7 @@ function stripAnsi(str: string): string {
   return str.replace(/\x1B\[[0-9;]*m/g, '');
 }
 
-describe('BabError format — exact message templates', () => {
+describe('UlmError format — exact message templates', () => {
   const colorOpts: RenderOpts = { color: false, unicode: true };
   const noUniOpts: RenderOpts = { color: false, unicode: false };
 
@@ -52,7 +52,7 @@ describe('BabError format — exact message templates', () => {
   it('AC-04: CliTimeout renders exact template', () => {
     const err = new CliTimeout('claude', 60);
     const out = err.format(colorOpts);
-    expect(out).toBe("✗ E-CLI-TIMEOUT: provider 'claude' timed out after 60s. Set BAB_TURN_TIMEOUT to extend.");
+    expect(out).toBe("✗ E-CLI-TIMEOUT: provider 'claude' timed out after 60s. Set ULM_TURN_TIMEOUT to extend.");
   });
 
   it('AC-05: AcpProtocol renders exact template', () => {
@@ -82,19 +82,19 @@ describe('BabError format — exact message templates', () => {
   it('AC-09: StateLocked message text', () => {
     const err = new StateLocked();
     const out = err.format(colorOpts);
-    expect(out).toBe('✗ E-STATE-LOCK-FAILED: another bab process is writing state. Retrying...');
+    expect(out).toBe('✗ E-STATE-LOCK-FAILED: another ulm process is writing state. Retrying...');
   });
 
   it('AC-10: StateCorrupt renders exact template', () => {
-    const err = new StateCorrupt('/home/user/.config/bab/state.toml');
+    const err = new StateCorrupt('/home/user/.config/ulm/state.toml');
     const out = err.format(colorOpts);
-    expect(out).toBe('✗ E-STATE-CORRUPT: /home/user/.config/bab/state.toml is corrupt. Move it aside and re-run.');
+    expect(out).toBe('✗ E-STATE-CORRUPT: /home/user/.config/ulm/state.toml is corrupt. Move it aside and re-run.');
   });
 
   it('AC-11: StateSchema renders exact template', () => {
     const err = new StateSchema(2, 1);
     const out = err.format(colorOpts);
-    expect(out).toBe('✗ E-STATE-SCHEMA: state.toml is from a newer bab (v2, this is v1). Upgrade bab or use BAB_CONFIG_DIR.');
+    expect(out).toBe('✗ E-STATE-SCHEMA: state.toml is from a newer ulm (v2, this is v1). Upgrade ulm or use ULM_CONFIG_DIR.');
   });
 
   it('AC-12: ProviderVersion is a warning with ⚠ glyph', () => {
@@ -104,9 +104,9 @@ describe('BabError format — exact message templates', () => {
   });
 
   it('AC-13: Perms renders exact template', () => {
-    const err = new Perms('/home/user/.config/bab/state.toml');
+    const err = new Perms('/home/user/.config/ulm/state.toml');
     const out = err.format(colorOpts);
-    expect(out).toBe('✗ E-PERMS: state.toml has insecure permissions. Run: chmod 0600 /home/user/.config/bab/state.toml');
+    expect(out).toBe('✗ E-PERMS: state.toml has insecure permissions. Run: chmod 0600 /home/user/.config/ulm/state.toml');
   });
 });
 
@@ -227,7 +227,7 @@ describe('Exit code mapping (AC-24)', () => {
 describe('Redaction — positive corpus (AC-17..AC-21)', () => {
   beforeEach(() => {
     _resetExtraPatterns();
-    delete process.env['BAB_REDACT_EXTRA'];
+    delete process.env['ULM_REDACT_EXTRA'];
   });
 
   it('AC-17: Bearer token redacted', () => {
@@ -264,12 +264,12 @@ describe('Redaction — positive corpus (AC-17..AC-21)', () => {
     expect(scrub('Basic short')).toBe('Basic short');
   });
 
-  it('AC-21: BAB_REDACT_EXTRA adds patterns', () => {
+  it('AC-21: ULM_REDACT_EXTRA adds patterns', () => {
     _resetExtraPatterns();
-    process.env['BAB_REDACT_EXTRA'] = 'MY_SECRET_[0-9]+';
+    process.env['ULM_REDACT_EXTRA'] = 'MY_SECRET_[0-9]+';
     const result = scrub('MY_SECRET_12345 is secret');
     expect(result).toContain('[REDACTED]');
-    delete process.env['BAB_REDACT_EXTRA'];
+    delete process.env['ULM_REDACT_EXTRA'];
     _resetExtraPatterns();
   });
 });
@@ -277,7 +277,7 @@ describe('Redaction — positive corpus (AC-17..AC-21)', () => {
 describe('Redaction — negative corpus (normal text not redacted)', () => {
   beforeEach(() => {
     _resetExtraPatterns();
-    delete process.env['BAB_REDACT_EXTRA'];
+    delete process.env['ULM_REDACT_EXTRA'];
   });
 
   const normalLines = [
@@ -328,9 +328,9 @@ describe('isWarning()', () => {
   });
 });
 
-describe('BabError instanceof checks', () => {
-  it('CliMissing is instanceof BabError', () => {
-    expect(new CliMissing('claude', 'https://example.com')).toBeInstanceOf(BabError);
+describe('UlmError instanceof checks', () => {
+  it('CliMissing is instanceof UlmError', () => {
+    expect(new CliMissing('claude', 'https://example.com')).toBeInstanceOf(UlmError);
   });
 
   it('CliMissing is instanceof Error', () => {

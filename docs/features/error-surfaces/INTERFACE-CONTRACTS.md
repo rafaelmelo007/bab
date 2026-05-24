@@ -1,17 +1,17 @@
 # Interface Contracts — Error Surfaces
 
 **Feature:** error-surfaces
-**Source:** docs/prds/2026-05-23-bab.md §4.8 (error catalog), §7.2 (redaction); /vskit:critique-spec D-06 (2026-05-23)
+**Source:** docs/prds/2026-05-23-ulm.md §4.8 (error catalog), §7.2 (redaction); /vskit:critique-spec D-06 (2026-05-23)
 **Last updated:** 2026-05-23
 
-> The `BabError` class hierarchy is the single source of truth for failure surfacing across bab. Downstream features (F-02, F-05, F-06, F-07) depend on this shape and the §4.8 message templates. Changes here propagate to those features via `/vskit:critique-spec`.
+> The `UlmError` class hierarchy is the single source of truth for failure surfacing across ulm. Downstream features (F-02, F-05, F-06, F-07) depend on this shape and the §4.8 message templates. Changes here propagate to those features via `/vskit:critique-spec`.
 
-## §1 `BabError` TypeScript shape
+## §1 `UlmError` TypeScript shape
 
 ```ts
 // src/errors/index.ts
 
-export type BabErrorCode =
+export type UlmErrorCode =
   | "E-CLI-MISSING"
   | "E-CLI-UNAUTH"
   | "E-CLI-CRASH"
@@ -33,34 +33,34 @@ export interface RenderOpts {
   unicode: boolean;   // resolved from LANG / LC_ALL / Windows legacy console probe
 }
 
-export abstract class BabError extends Error {
-  abstract readonly code: BabErrorCode;
+export abstract class UlmError extends Error {
+  abstract readonly code: UlmErrorCode;
   abstract readonly isWarning: boolean;     // true only for ProviderVersion
   abstract exitCode(): number;              // per §3 below
   abstract format(opts: RenderOpts): string;  // §4.8 templates
 }
 
-export class CliMissing      extends BabError { constructor(public provider: string, public docUrl: string) { super(); /* … */ } /* code = "E-CLI-MISSING" */ }
-export class CliUnauth       extends BabError { constructor(public provider: string) { super(); } }
-export class CliCrash        extends BabError { constructor(public provider: string, public exit: number) { super(); } }
-export class CliTimeout      extends BabError { constructor(public provider: string, public seconds: number) { super(); } }
-export class AcpProtocol     extends BabError { constructor(public provider: string, public detail: string) { super(); } }
-export class HttpTimeout     extends BabError {}
-export class InvalidProvider extends BabError { constructor(public name: string) { super(); } }
-export class NoProvider      extends BabError {}
-export class StateLocked     extends BabError {}
-export class StateCorrupt    extends BabError { constructor(public path: string) { super(); } }
-export class StateSchema     extends BabError { constructor(public found: number, public supported: number) { super(); } }
-export class ProviderVersion extends BabError { constructor(public provider: string, public found: string, public minimum: string) { super(); } /* isWarning = true */ }
-export class Perms           extends BabError { constructor(public path: string) { super(); } }
-export class CliNoPrompt     extends BabError { constructor(public detail: "no_arg" | "empty_stdin") { super(); } }
-export class CliInvalidUtf8  extends BabError { constructor(public byteOffset: number) { super(); } }
+export class CliMissing      extends UlmError { constructor(public provider: string, public docUrl: string) { super(); /* … */ } /* code = "E-CLI-MISSING" */ }
+export class CliUnauth       extends UlmError { constructor(public provider: string) { super(); } }
+export class CliCrash        extends UlmError { constructor(public provider: string, public exit: number) { super(); } }
+export class CliTimeout      extends UlmError { constructor(public provider: string, public seconds: number) { super(); } }
+export class AcpProtocol     extends UlmError { constructor(public provider: string, public detail: string) { super(); } }
+export class HttpTimeout     extends UlmError {}
+export class InvalidProvider extends UlmError { constructor(public name: string) { super(); } }
+export class NoProvider      extends UlmError {}
+export class StateLocked     extends UlmError {}
+export class StateCorrupt    extends UlmError { constructor(public path: string) { super(); } }
+export class StateSchema     extends UlmError { constructor(public found: number, public supported: number) { super(); } }
+export class ProviderVersion extends UlmError { constructor(public provider: string, public found: string, public minimum: string) { super(); } /* isWarning = true */ }
+export class Perms           extends UlmError { constructor(public path: string) { super(); } }
+export class CliNoPrompt     extends UlmError { constructor(public detail: "no_arg" | "empty_stdin") { super(); } }
+export class CliInvalidUtf8  extends UlmError { constructor(public byteOffset: number) { super(); } }
 ```
 
 Discriminated-union variant (alternative for callers that prefer pattern matching over `instanceof`):
 
 ```ts
-export type BabErrorUnion =
+export type UlmErrorUnion =
   | { code: "E-CLI-MISSING"; provider: string; docUrl: string }
   | { code: "E-CLI-UNAUTH"; provider: string }
   | /* … */ ;
@@ -73,14 +73,14 @@ export type BabErrorUnion =
 | `CliMissing` | `provider 'X': not installed. Install: <doc URL>` | ✗ |
 | `CliUnauth` | `provider 'X' not authenticated. Run: X login` | ✗ |
 | `CliCrash` | `provider 'X' crashed (exit N). Output above may be partial.` | ✗ |
-| `CliTimeout` | `provider 'X' timed out after Ns. Set BAB_TURN_TIMEOUT to extend.` | ✗ |
+| `CliTimeout` | `provider 'X' timed out after Ns. Set ULM_TURN_TIMEOUT to extend.` | ✗ |
 | `AcpProtocol` | `provider 'X' ACP error: <detail>. Falling back to exec mode this turn.` | ✗ |
 | `HttpTimeout` | `ollama timeout after 30s. Is the daemon running?` | ✗ |
 | `InvalidProvider` | `unknown provider 'foo'. Valid: claude, codex, gemini, ollama` | ✗ |
 | `NoProvider` | `no provider selected. Run: /provider <name>` | ✗ |
-| `StateLocked` | `another bab process is writing state. Retrying...` (coalesced per D-02) | ✗ |
+| `StateLocked` | `another ulm process is writing state. Retrying...` (coalesced per D-02) | ✗ |
 | `StateCorrupt` | `<path> is corrupt. Move it aside and re-run.` | ✗ |
-| `StateSchema` | `state.toml is from a newer bab (vN, this is vM). Upgrade bab or use BAB_CONFIG_DIR.` | ✗ |
+| `StateSchema` | `state.toml is from a newer ulm (vN, this is vM). Upgrade ulm or use ULM_CONFIG_DIR.` | ✗ |
 | `ProviderVersion` | `provider 'X' is vN, minimum vM. Some features may not work.` | ⚠ |
 | `Perms` | `state.toml has insecure permissions. Run: chmod 0600 <path>` | ✗ |
 | `CliNoPrompt` (F-07 D-02) | `no prompt provided. …` / `stdin is empty.` | ✗ |
@@ -91,7 +91,7 @@ export type BabErrorUnion =
 
 ## §3 Exit-code mapping (consumed by F-07 one-shot)
 
-Owned by F-07 D-01; restated here for INV-1 single-source-of-truth on `BabError.exitCode()` return values:
+Owned by F-07 D-01; restated here for INV-1 single-source-of-truth on `UlmError.exitCode()` return values:
 
 | Code | Exit | sysexits / POSIX convention |
 |------|------|-----------------------------|
@@ -125,7 +125,7 @@ export function scrubWith(line: string, extra: readonly RegExp[]): string;
 //   /https:\/\/.*[?&](access_token|refresh_token)=[^&\s]*/g
 //   /Basic [A-Za-z0-9+/=]{20,}/g
 
-// Parses BAB_REDACT_EXTRA="<r1>,<r2>" at startup; invalid regex → console.warn once, defaults still apply.
+// Parses ULM_REDACT_EXTRA="<r1>,<r2>" at startup; invalid regex → console.warn once, defaults still apply.
 // OR'd against defaults — additive only (D-03).
 ```
 

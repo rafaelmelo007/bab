@@ -9,7 +9,7 @@
 | T-01 | Scaffold `src/state/index.ts` exporting `StateStore` class with `load()`, `saveWithLock(callback)`, `migrate()` API | backend-lead | High | Done | AC-01, AC-02 | — |
 | T-02 | Add `@iarna/toml` (^3) and `proper-lockfile` (^4) deps to package.json | backend-lead | High | Done | AC-01 | D-01, D-05 |
 | T-03 | Implement TOML parse via `@iarna/toml.parse()`; preserve original document tree for round-trip via `toml.stringify` | backend-lead | High | Done | AC-01, AC-07 | D-01 |
-| T-04 | Implement config-dir resolver: `BAB_CONFIG_DIR` → `$XDG_CONFIG_HOME/bab` (Linux) → `~/Library/Application Support/bab` (macOS) → `%APPDATA%\bab` (Windows) | backend-lead | High | Done | AC-14 | — |
+| T-04 | Implement config-dir resolver: `ULM_CONFIG_DIR` → `$XDG_CONFIG_HOME/ulm` (Linux) → `~/Library/Application Support/ulm` (macOS) → `%APPDATA%\ulm` (Windows) | backend-lead | High | Done | AC-14 | — |
 | T-05 | Implement first-run: create parent dir with mode 0700 (Unix) / icacls user-only (Windows); write minimal v1 file with mode 0600 | security-specialist | High | Done | AC-02, AC-12 | D-02 |
 | T-06 | Implement atomic write: `fs.writeFile(tmp)` → `fs.fsync(tmpFd)` → `fs.fsync(parentDirFd)` (Unix only) → `fs.rename(tmp, final)` | backend-lead | High | Done | AC-03 | D-03 |
 | T-07 | Implement per-key merge inside `saveWithLock`: re-read on-disk state, apply caller delta via callback, then write merged tree | backend-lead | High | Done | AC-04 | — |
@@ -34,7 +34,7 @@
 | T-26 | Write lockfile leak test: 100 sequential writes (incl. one throwing writer) leave no stale lockfile | testing-lead | High | Done | TC-13, AC-05 | D-05 |
 | T-27 | Write migration partial-failure injection test: next launch restores from `.bak`, prints warning, succeeds | testing-lead | Medium | Done | TC-15, AC-10 | — |
 | T-28 | Write fast-check property test: random valid TOML + arbitrary unknown keys, write then re-read — known fields equal, unknown keys equal | testing-lead | Medium | Done | TC-17 | — |
-| T-29 | Write integration test for `BAB_CONFIG_DIR` env override across all three platforms | testing-lead | Low | Done | TC-16 | — |
+| T-29 | Write integration test for `ULM_CONFIG_DIR` env override across all three platforms | testing-lead | Low | Done | TC-16 | — |
 | T-30 | Implement reader-write mtime/etag mismatch warning (one-line stderr, not an error) per D-04 | backend-lead | Low | Done | — | D-04 |
 
 **Status values:** Pending → In Progress → In Review → Done

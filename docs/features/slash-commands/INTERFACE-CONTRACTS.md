@@ -1,7 +1,7 @@
 # Interface Contracts — Slash Commands
 
 **Feature:** slash-commands
-**Source:** docs/prds/2026-05-23-bab.md §4.5, §4.7, §4.9, §4.9.2; /vskit:critique-spec D-02 / D-04 / D-05 (2026-05-23, Node.js retrofit)
+**Source:** docs/prds/2026-05-23-ulm.md §4.5, §4.7, §4.9, §4.9.2; /vskit:critique-spec D-02 / D-04 / D-05 (2026-05-23, Node.js retrofit)
 **Last updated:** 2026-05-23
 
 > Dispatch signature is the load-bearing API between F-02, F-05, F-06, F-08. The `/help` and `/providers` byte-exact outputs are also pinned here per INV-1.
@@ -19,7 +19,7 @@ export type Handler = (
 export type DispatchResult =
   | { kind: "continue" }              // re-prompt; no exit
   | { kind: "exit"; code: number }    // clean shutdown
-  | { kind: "error"; error: BabError };  // F-08 prints + reprompt
+  | { kind: "error"; error: UlmError };  // F-08 prints + reprompt
 
 export interface CommandRegistry {
   readonly table: readonly (readonly [string, Handler])[];
@@ -52,7 +52,7 @@ Implicit: Ctrl-D = `/exit`; double Ctrl-C within 1 s = exit 130 (F-01 handles).
 Source of truth: `tests/fixtures/help_output.txt` (per D-02). Reproduced here for documentation parity; the fixture is authoritative.
 
 ```
-bab commands:
+ulm commands:
   /provider [name]    set or show active provider (claude, codex, gemini, ollama)
   /providers          list providers and their detection status
   /new                start a fresh session with the current provider
@@ -64,8 +64,8 @@ bab commands:
   /exit, Ctrl-D       quit
 
 Type any other message to send to the current provider.
-For one-shot use: bab -p <provider> "your prompt"
-Docs: https://github.com/<owner>/bab
+For one-shot use: ulm -p <provider> "your prompt"
+Docs: https://github.com/<owner>/ulm
 ```
 
 ## §3 `/providers` output format
@@ -116,4 +116,4 @@ Slash-commands dispatcher throws these F-08 subclasses (see [F-08 INTERFACE-CONT
 
 - `NoProvider` — pre-check before any non-slash input
 - `InvalidProvider` — bubble-up from F-02 `/provider <bad>` handler
-- Unknown-command surface (§4) is NOT a `BabError` subclass; it's a local render in this feature.
+- Unknown-command surface (§4) is NOT a `UlmError` subclass; it's a local render in this feature.

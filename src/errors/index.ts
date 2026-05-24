@@ -1,11 +1,11 @@
 /**
  * Error Surfaces — F-08
- * Provides all 13 BabError subclasses, ANSI formatting, and exit-code mapping.
+ * Provides all 13 UlmError subclasses, ANSI formatting, and exit-code mapping.
  */
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
-export type BabErrorCode =
+export type UlmErrorCode =
   | 'E-CLI-MISSING'
   | 'E-CLI-UNAUTH'
   | 'E-CLI-CRASH'
@@ -72,7 +72,7 @@ function warnGlyph(opts: RenderOpts): string {
 
 function formatPrefix(
   glyph: string,
-  code: BabErrorCode,
+  code: UlmErrorCode,
   glyphAnsi: string,
   opts: RenderOpts,
 ): string {
@@ -84,8 +84,8 @@ function formatPrefix(
 
 // ─── Abstract base ────────────────────────────────────────────────────────────
 
-export abstract class BabError extends Error {
-  abstract readonly code: BabErrorCode;
+export abstract class UlmError extends Error {
+  abstract readonly code: UlmErrorCode;
   abstract exitCode(): number;
   abstract isWarning(): boolean;
   abstract messageText(): string;
@@ -102,7 +102,7 @@ export abstract class BabError extends Error {
 
 // ─── 13 concrete error classes ────────────────────────────────────────────────
 
-export class CliMissing extends BabError {
+export class CliMissing extends UlmError {
   readonly code = 'E-CLI-MISSING' as const;
   constructor(
     private readonly provider: string,
@@ -117,7 +117,7 @@ export class CliMissing extends BabError {
   isWarning(): boolean { return false; }
 }
 
-export class CliUnauth extends BabError {
+export class CliUnauth extends UlmError {
   readonly code = 'E-CLI-UNAUTH' as const;
   constructor(private readonly provider: string) {
     super(`provider '${provider}' not authenticated. Run: ${provider} login`);
@@ -129,7 +129,7 @@ export class CliUnauth extends BabError {
   isWarning(): boolean { return false; }
 }
 
-export class CliCrash extends BabError {
+export class CliCrash extends UlmError {
   readonly code = 'E-CLI-CRASH' as const;
   constructor(
     private readonly provider: string,
@@ -144,22 +144,22 @@ export class CliCrash extends BabError {
   isWarning(): boolean { return false; }
 }
 
-export class CliTimeout extends BabError {
+export class CliTimeout extends UlmError {
   readonly code = 'E-CLI-TIMEOUT' as const;
   constructor(
     private readonly provider: string,
     private readonly seconds: number,
   ) {
-    super(`provider '${provider}' timed out after ${seconds}s. Set BAB_TURN_TIMEOUT to extend.`);
+    super(`provider '${provider}' timed out after ${seconds}s. Set ULM_TURN_TIMEOUT to extend.`);
   }
   messageText(): string {
-    return `provider '${this.provider}' timed out after ${this.seconds}s. Set BAB_TURN_TIMEOUT to extend.`;
+    return `provider '${this.provider}' timed out after ${this.seconds}s. Set ULM_TURN_TIMEOUT to extend.`;
   }
   exitCode(): number { return 124; }
   isWarning(): boolean { return false; }
 }
 
-export class AcpProtocol extends BabError {
+export class AcpProtocol extends UlmError {
   readonly code = 'E-ACP-PROTOCOL' as const;
   constructor(
     private readonly provider: string,
@@ -174,7 +174,7 @@ export class AcpProtocol extends BabError {
   isWarning(): boolean { return false; }
 }
 
-export class HttpTimeout extends BabError {
+export class HttpTimeout extends UlmError {
   readonly code = 'E-HTTP-TIMEOUT' as const;
   constructor() {
     super('ollama timeout after 30s. Is the daemon running?');
@@ -186,7 +186,7 @@ export class HttpTimeout extends BabError {
   isWarning(): boolean { return false; }
 }
 
-export class InvalidProvider extends BabError {
+export class InvalidProvider extends UlmError {
   readonly code = 'E-INVALID-PROVIDER' as const;
   constructor(private readonly name: string) {
     super(`unknown provider '${name}'. Valid: claude, codex, gemini, ollama`);
@@ -198,7 +198,7 @@ export class InvalidProvider extends BabError {
   isWarning(): boolean { return false; }
 }
 
-export class NoProvider extends BabError {
+export class NoProvider extends UlmError {
   readonly code = 'E-NO-PROVIDER' as const;
   constructor() {
     super('no provider selected. Run: /provider <name>');
@@ -210,19 +210,19 @@ export class NoProvider extends BabError {
   isWarning(): boolean { return false; }
 }
 
-export class StateLocked extends BabError {
+export class StateLocked extends UlmError {
   readonly code = 'E-STATE-LOCK-FAILED' as const;
   constructor() {
-    super('another bab process is writing state. Retrying...');
+    super('another ulm process is writing state. Retrying...');
   }
   messageText(): string {
-    return 'another bab process is writing state. Retrying...';
+    return 'another ulm process is writing state. Retrying...';
   }
   exitCode(): number { return 74; }
   isWarning(): boolean { return false; }
 }
 
-export class StateCorrupt extends BabError {
+export class StateCorrupt extends UlmError {
   readonly code = 'E-STATE-CORRUPT' as const;
   constructor(private readonly path: string) {
     super(`${path} is corrupt. Move it aside and re-run.`);
@@ -234,22 +234,22 @@ export class StateCorrupt extends BabError {
   isWarning(): boolean { return false; }
 }
 
-export class StateSchema extends BabError {
+export class StateSchema extends UlmError {
   readonly code = 'E-STATE-SCHEMA' as const;
   constructor(
     private readonly found: number,
     private readonly supported: number,
   ) {
-    super(`state.toml is from a newer bab (v${found}, this is v${supported}). Upgrade bab or use BAB_CONFIG_DIR.`);
+    super(`state.toml is from a newer ulm (v${found}, this is v${supported}). Upgrade ulm or use ULM_CONFIG_DIR.`);
   }
   messageText(): string {
-    return `state.toml is from a newer bab (v${this.found}, this is v${this.supported}). Upgrade bab or use BAB_CONFIG_DIR.`;
+    return `state.toml is from a newer ulm (v${this.found}, this is v${this.supported}). Upgrade ulm or use ULM_CONFIG_DIR.`;
   }
   exitCode(): number { return 74; }
   isWarning(): boolean { return false; }
 }
 
-export class ProviderVersion extends BabError {
+export class ProviderVersion extends UlmError {
   readonly code = 'E-PROVIDER-VERSION' as const;
   constructor(
     private readonly provider: string,
@@ -265,7 +265,7 @@ export class ProviderVersion extends BabError {
   isWarning(): boolean { return true; }
 }
 
-export class Perms extends BabError {
+export class Perms extends UlmError {
   readonly code = 'E-PERMS' as const;
   constructor(private readonly path: string) {
     super(`state.toml has insecure permissions. Run: chmod 0600 ${path}`);

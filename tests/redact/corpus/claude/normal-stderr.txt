@@ -117,15 +117,15 @@ Process ID: 12345
 Parent PID: 12344
 Working directory: /home/user
 Home directory: /home/user
-Config directory: /home/user/.config/bab
-Cache directory: /home/user/.cache/bab
-Data directory: /home/user/.local/share/bab
+Config directory: /home/user/.config/ulm
+Cache directory: /home/user/.cache/ulm
+Data directory: /home/user/.local/share/ulm
 Temp directory: /tmp
 Socket path: /tmp/claude.sock
 PID file: /tmp/claude.pid
 Lock file: /tmp/claude.lock
-State file: /home/user/.config/bab/state.toml
-History file: /home/user/.local/share/bab/history
+State file: /home/user/.config/ulm/state.toml
+History file: /home/user/.local/share/ulm/history
 Plugin loaded: default
 Plugin version: 1.0.0
 Theme: default

@@ -1,23 +1,23 @@
-# Maintainer: bab maintainers <maintainers@example.com>
-pkgname=bab
+# Maintainer: ulm maintainers <maintainers@example.com>
+pkgname=ulm
 pkgver=VERSION_PLACEHOLDER
 pkgrel=1
 pkgdesc="Unified CLI gateway to Claude, Codex, Gemini, and Ollama"
 arch=('any')
-url="https://github.com/owner/bab"
+url="https://github.com/owner/ulm"
 license=('MIT' 'Apache')
 depends=('nodejs>=20')
-source=("https://registry.npmjs.org/bab/-/bab-${pkgver}.tgz")
+source=("https://registry.npmjs.org/ulm/-/ulm-${pkgver}.tgz")
 sha256sums=('SHA256_PLACEHOLDER')
 
 package() {
-  install -dm755 "${pkgdir}/usr/lib/node_modules/bab"
-  cp -r "${srcdir}/package/." "${pkgdir}/usr/lib/node_modules/bab/"
+  install -dm755 "${pkgdir}/usr/lib/node_modules/ulm"
+  cp -r "${srcdir}/package/." "${pkgdir}/usr/lib/node_modules/ulm/"
 
   install -dm755 "${pkgdir}/usr/bin"
-  cat > "${pkgdir}/usr/bin/bab" <<'EOF'
+  cat > "${pkgdir}/usr/bin/ulm" <<'EOF'
 #!/usr/bin/env sh
-exec node /usr/lib/node_modules/bab/bin/bab.mjs "$@"
+exec node /usr/lib/node_modules/ulm/bin/ulm.mjs "$@"
 EOF
-  chmod 755 "${pkgdir}/usr/bin/bab"
+  chmod 755 "${pkgdir}/usr/bin/ulm"
 }

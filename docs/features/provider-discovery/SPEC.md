@@ -6,14 +6,14 @@
 **Touches:** [src/discovery/**]
 **Prototype:** N/A
 **Agents:** backend-lead, security-specialist, testing-lead
-**Source:** docs/prds/2026-05-23-bab.md §6 — F-03; §5.4, §5.1.1, §4.7, §4.9.2, §7.1, §14.1
+**Source:** docs/prds/2026-05-23-ulm.md §6 — F-03; §5.4, §5.1.1, §4.7, §4.9.2, §7.1, §14.1
 **Last updated:** 2026-05-23
 
 ---
 
 ## §1 Problem Statement
 
-bab needs to know which provider CLIs the user actually has installed, their versions, which transport each supports, and whether the path/binary has changed since last launch — without blocking startup or trusting a stale cache. This feature owns the PATH probe per PRD §5.4: locate `claude`, `codex`, `gemini`, `ollama` on `$PATH`; record absolute (canonicalized) paths + SHA-256 + version + capability in state.toml; re-verify on every launch to defend against PATH-poisoning. It feeds `/providers` output (§4.9.2) and the first-run welcome screen (§4.7).
+ulm needs to know which provider CLIs the user actually has installed, their versions, which transport each supports, and whether the path/binary has changed since last launch — without blocking startup or trusting a stale cache. This feature owns the PATH probe per PRD §5.4: locate `claude`, `codex`, `gemini`, `ollama` on `$PATH`; record absolute (canonicalized) paths + SHA-256 + version + capability in state.toml; re-verify on every launch to defend against PATH-poisoning. It feeds `/providers` output (§4.9.2) and the first-run welcome screen (§4.7).
 
 ## §2 Scope
 
@@ -54,7 +54,7 @@ bab needs to know which provider CLIs the user actually has installed, their ver
 - [ ] AC-09: `ollama --version` below 0.1.20 (§14.1) → `⚠` mark, `ProviderVersion` thrown once per session, does not block use.
 - [ ] AC-10: `/providers` output matches §4.9.2 four-column layout byte-for-byte; em-dash `—` for missing fields; glyph downgrades to `[ok]`/`[!]`/`[err]` and em-dash to `-` under NO_COLOR or non-UTF-8 locale.
 - [ ] AC-11: First run with 1–3 providers detected → §4.7 welcome screen wording, capitalization, two-space gaps verified by golden-file unit test (vitest snapshot).
-- [ ] AC-12: Zero providers detected on `$PATH` → zero-provider §4.7 welcome variant rendered with the four install URLs; bab returns to REPL prompt (does not exit).
+- [ ] AC-12: Zero providers detected on `$PATH` → zero-provider §4.7 welcome variant rendered with the four install URLs; ulm returns to REPL prompt (does not exit).
 - [ ] AC-13: Symlink at probed path (`~/.local/bin/claude → /usr/local/bin/claude`) → `absolute_path` records `/usr/local/bin/claude` (canonical target via `fs.realpath`), not the symlink.
 
 ## §4 Non-Functional Requirements
@@ -63,7 +63,7 @@ bab needs to know which provider CLIs the user actually has installed, their ver
 |-----------|-------------|
 | Latency (p95) | First-run discovery ≤ 1500 ms total wall-clock; per-provider probe ≤ 500 ms hard limit (kill via `AbortController.abort()`); cached-launch revalidation ≤ 50 ms p95. |
 | Concurrency | All four probes run via `Promise.all` on the event loop; serial probing (4 × 500 ms = 2000 ms) would exceed the total budget. |
-| Error budget | Probe timeout, missing binary, parse failure, hash mismatch — none crash bab; each downgrades to `✗ —` or `⚠` and is reported in `/providers`. |
+| Error budget | Probe timeout, missing binary, parse failure, hash mismatch — none crash ulm; each downgrades to `✗ —` or `⚠` and is reported in `/providers`. |
 | Browser support | N/A |
 | Quota enforcement | N/A |
 | Accessibility | `/providers` glyphs (`✓ ⚠ ✗`) carry adjacent text via the status column; downgrade to `[ok] [!] [err]` per §4.7 when `LANG`/`LC_ALL` lacks UTF-8 or `NO_COLOR=1`; em-dash downgrades to `-`. |
@@ -78,7 +78,7 @@ bab needs to know which provider CLIs the user actually has installed, their ver
 
 ## §6 Interface Contracts
 
-> Not applicable — `Applies` does not include `interface-contracts`. `<provider> --version` parsing is governed by each provider's CLI, not by bab.
+> Not applicable — `Applies` does not include `interface-contracts`. `<provider> --version` parsing is governed by each provider's CLI, not by ulm.
 
 ## §7 Test Specification
 
@@ -90,19 +90,19 @@ bab needs to know which provider CLIs the user actually has installed, their ver
 | TC-04 | Unit | `/providers` golden render — 4 ready, 4 mixed, 0 providers | Byte-for-byte match with `tests/golden/providers_*.txt` under NO_COLOR and color |
 | TC-05 | Unit | First-run welcome golden (3-detected + zero-detected) | Byte-for-byte match with §4.7 wording |
 | TC-06 | Integration | Mock PATH with 4 fake binaries (shell scripts on Unix, `.cmd` files on Windows); cold discovery | All 4 detected; state.toml written; total ≤ 1500 ms on `ubuntu-latest` |
-| TC-07 | Integration | Mock binary sleeps 600 ms on `--version` | Probe aborted at 500 ms; provider recorded as `✗ —`; bab continues |
+| TC-07 | Integration | Mock binary sleeps 600 ms on `--version` | Probe aborted at 500 ms; provider recorded as `✗ —`; ulm continues |
 | TC-08 | Integration | Parallel probe budget — 4 binaries each sleep 400 ms | Total ≤ 700 ms (proves `Promise.all` parallelism) |
 | TC-09 | Integration | Cached path no longer exists | Re-probe runs; new path persisted; capability detection re-ran |
 | TC-10 | Integration | Stale SHA-256 (file modified between launches) | Warning emitted exactly once; re-detection runs; new hash persisted |
 | TC-11 | Integration | Version skew (cached 1.2.0 vs current 1.3.0) | Capability detection re-runs silently; no warning printed |
 | TC-12 | Integration | Symlink at `/tmp/claude → /usr/local/bin/claude` | `absolute_path` = `/usr/local/bin/claude` |
-| TC-13 | Integration | Ollama daemon down — binary exists but 11434 unreachable | Transport `http`, status `⚠`, surfaced in `/providers`; bab launches |
+| TC-13 | Integration | Ollama daemon down — binary exists but 11434 unreachable | Transport `http`, status `⚠`, surfaced in `/providers`; ulm launches |
 | TC-14 | Integration | Below-minimum ollama (0.1.19) | `ProviderVersion` thrown once at first surface; not repeated within session |
-| TC-15 | E2E (node-pty) | Full bab launch on fixture PATH; first prompt sent | Discovery completes; `/providers` matches expected; prompt routes correctly |
+| TC-15 | E2E (node-pty) | Full ulm launch on fixture PATH; first prompt sent | Discovery completes; `/providers` matches expected; prompt routes correctly |
 
 ## §8 Cross-References
 
-- **PRD:** docs/prds/2026-05-23-bab.md §6 — F-03; §5.4, §5.1.1, §4.7, §4.9.2, §7.1, §14.1
+- **PRD:** docs/prds/2026-05-23-ulm.md §6 — F-03; §5.4, §5.1.1, §4.7, §4.9.2, §7.1, §14.1
 - **Decisions:** [DECISIONS.md](./DECISIONS.md)
 - **Tasks:** [TASKS.md](./TASKS.md)
 - **Blocked-by:** [state-store]
@@ -119,7 +119,7 @@ bab needs to know which provider CLIs the user actually has installed, their ver
 
 - The SHA-256 record is informational, not a security boundary (PRD §5.4). Hash mismatch triggers re-detection + warning, not refuse-to-run.
 - Parallelizing the four probes via `Promise.all` is non-optional under the 1500 ms budget — serial worst-case (4 × 500 ms) exceeds it.
-- Version-string parsing must be best-effort: provider `--version` formats drift over time, and bab must not crash on format change. Raw string is preserved for forensics; semver triple is computed lazily for comparison.
+- Version-string parsing must be best-effort: provider `--version` formats drift over time, and ulm must not crash on format change. Raw string is preserved for forensics; semver triple is computed lazily for comparison.
 - D-08 capability detection for ACP requires a functional probe (`initialize` handshake), not just `--version` parsing — a binary that announces ACP support may still fail to negotiate.
 - Below-minimum versions emit `ProviderVersion` once per session via F-08's dedup `Set<string>` (D-07 in F-08 critique).
 - Pure-JS implementation: `node:fs.realpath`, `node:child_process.execFile`, `node:crypto.createHash`, `fetch` (Node 18+ built-in). Zero native deps, zero install-footprint cost.

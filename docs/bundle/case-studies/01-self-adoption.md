@@ -10,7 +10,7 @@
 
 ## Context
 
-The bundle existed as a single 1027-line spec file (`vertical-slices-ai-framework.md`, v1.7) inside the `bab` repo. The question: is this bundle *market-ready* as a drop-in methodology that another repo can adopt? Definition agreed up front: **"adoptable by another repo in under an hour."**
+The bundle existed as a single 1027-line spec file (`vertical-slices-ai-framework.md`, v1.7) inside the `ulm` repo. The question: is this bundle *market-ready* as a drop-in methodology that another repo can adopt? Definition agreed up front: **"adoptable by another repo in under an hour."**
 
 No external user had adopted it. No reference scripts had shipped. No worked example existed. No README beyond the spec itself.
 
@@ -90,7 +90,7 @@ That means: **this case study is worth ~3 points on the Proof / Social-Proof dim
 
 ## What the next case study should be
 
-Real adoption in the `bab` CLI repo: convert `prd-bab.md` to the bundle's PRD format, scaffold `docs/features/repl/`, score it, document what hurt. That case study, once written, lifts Proof from 3 toward 6.
+Real adoption in the `ulm` CLI repo: convert `prd-ulm.md` to the bundle's PRD format, scaffold `docs/features/repl/`, score it, document what hurt. That case study, once written, lifts Proof from 3 toward 6.
 
 ## Reference
 

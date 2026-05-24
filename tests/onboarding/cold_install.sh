@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # AC-06: Cold-install harness — measures time from npm i start to first streamed token.
-# Uses stub provider (D-07) to isolate bab onboarding latency from provider cold-start.
+# Uses stub provider (D-07) to isolate ulm onboarding latency from provider cold-start.
 # Fails if wall-clock > 120 s. Emits JSON timing artifact at $ARTIFACT_PATH.
 set -euo pipefail
 
@@ -9,14 +9,14 @@ MAX_SECONDS=120
 
 start=$(date +%s%N)
 
-# Install bab (version from $BAB_VERSION env or latest)
-npm install -g "${BAB_VERSION:+bab@$BAB_VERSION}" "${BAB_VERSION:-bab}"
+# Install ulm (version from $ULM_VERSION env or latest)
+npm install -g "${ULM_VERSION:+ulm@$ULM_VERSION}" "${ULM_VERSION:-ulm}"
 
-# Run stub provider ping — stub must be on PATH or pointed to by BAB_STUB_PATH
-STUB_PATH="${BAB_STUB_PATH:-$(npm root -g)/bab/tests/onboarding/fixtures/bab-stub-provider.mjs}"
-export BAB_STUB_PROVIDER_PATH="$STUB_PATH"
+# Run stub provider ping — stub must be on PATH or pointed to by ULM_STUB_PATH
+STUB_PATH="${ULM_STUB_PATH:-$(npm root -g)/ulm/tests/onboarding/fixtures/ulm-stub-provider.mjs}"
+export ULM_STUB_PROVIDER_PATH="$STUB_PATH"
 
-bab -p stub "ping"
+ulm -p stub "ping"
 
 end=$(date +%s%N)
 

@@ -49,7 +49,7 @@ mkdir -p docs/bundle
 cp -r <path-to-this-bundle>/* docs/bundle/
 
 # Or, if you're vendoring from a remote:
-# git submodule add https://github.com/OWNER/bab.git docs/bundle
+# git submodule add https://github.com/OWNER/ulm.git docs/bundle
 # git -C docs/bundle sparse-checkout set docs/bundle
 ```
 

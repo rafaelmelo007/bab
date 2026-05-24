@@ -16,22 +16,22 @@ The `rollback.yml` workflow automatically runs `npm deprecate` on the bad versio
 ### Within 72 h of publish
 
 ```bash
-npm unpublish bab@<VERSION>
+npm unpublish ulm@<VERSION>
 ```
 
 ### After 72 h
 
 ```bash
-npm deprecate bab@<VERSION> "REVERTED: <reason>"
+npm deprecate ulm@<VERSION> "REVERTED: <reason>"
 ```
 
 ### Homebrew revert
 
-Open a PR against `<owner>/homebrew-bab` reverting `Formula/bab.rb` to the previous version + SHA.
+Open a PR against `<owner>/homebrew-ulm` reverting `Formula/ulm.rb` to the previous version + SHA.
 
 ### AUR revert
 
-Open a PR against `<owner>/aur-bab` reverting `PKGBUILD` and `.SRCINFO`.
+Open a PR against `<owner>/aur-ulm` reverting `PKGBUILD` and `.SRCINFO`.
 
 ## Decision reference
 

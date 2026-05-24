@@ -4,7 +4,7 @@
  */
 
 import * as readline from 'node:readline';
-import { resolveRenderOpts, InvalidProvider, NoProvider, type BabError } from '../errors/index.js';
+import { resolveRenderOpts, InvalidProvider, NoProvider, type UlmError } from '../errors/index.js';
 import { ExecTransport } from '../transport/index.js';
 import { StateStore } from '../state/index.js';
 import { discoverOne } from '../discovery/index.js';
@@ -168,10 +168,10 @@ export async function runOneShot(opts: OneShotOpts): Promise<number> {
     }
     return 0;
   } catch (err) {
-    if (err && typeof err === 'object' && 'exitCode' in err && typeof (err as BabError).exitCode === 'function') {
-      const babErr = err as BabError;
-      process.stderr.write(babErr.format(renderOpts) + '\n');
-      return babErr.exitCode();
+    if (err && typeof err === 'object' && 'exitCode' in err && typeof (err as UlmError).exitCode === 'function') {
+      const ulmErr = err as UlmError;
+      process.stderr.write(ulmErr.format(renderOpts) + '\n');
+      return ulmErr.exitCode();
     }
     throw err;
   }

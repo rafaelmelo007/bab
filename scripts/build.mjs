@@ -5,7 +5,7 @@ import { readFileSync } from 'node:fs';
 
 const result = await build({
   entryPoints: ['src/index.ts'],
-  outfile: 'bin/bab.mjs',
+  outfile: 'bin/ulm.mjs',
   bundle: true,
   platform: 'node',
   format: 'esm',
@@ -19,17 +19,17 @@ const result = await build({
 });
 
 // T-05: bundle integrity check — no require() calls, valid ESM
-const src = readFileSync('bin/bab.mjs', 'utf8');
+const src = readFileSync('bin/ulm.mjs', 'utf8');
 if (/\brequire\s*\(/.test(src)) {
-  console.error('ERROR: bin/bab.mjs contains require() calls — not pure ESM');
+  console.error('ERROR: bin/ulm.mjs contains require() calls — not pure ESM');
   process.exit(1);
 }
 
 try {
-  execSync('node --check bin/bab.mjs', { stdio: 'inherit' });
+  execSync('node --check bin/ulm.mjs', { stdio: 'inherit' });
 } catch {
-  console.error('ERROR: bin/bab.mjs failed node --check');
+  console.error('ERROR: bin/ulm.mjs failed node --check');
   process.exit(1);
 }
 
-console.log('build ok — bin/bab.mjs');
+console.log('build ok — bin/ulm.mjs');

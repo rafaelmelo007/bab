@@ -13,18 +13,18 @@ let tmpDir: string;
 let stateStore: StateStore;
 
 beforeEach(async () => {
-  tmpDir = path.join(os.tmpdir(), `bab-telemetry-${Date.now()}-${Math.random().toString(36).slice(2)}`);
+  tmpDir = path.join(os.tmpdir(), `ulm-telemetry-${Date.now()}-${Math.random().toString(36).slice(2)}`);
   await fsp.mkdir(tmpDir, { recursive: true });
   stateStore = await StateStore.load(tmpDir);
-  delete process.env['BAB_NO_TELEMETRY'];
-  delete process.env['BAB_CACHE_DIR'];
+  delete process.env['ULM_NO_TELEMETRY'];
+  delete process.env['ULM_CACHE_DIR'];
   _setDevMode(false);
 });
 
 afterEach(async () => {
   vi.restoreAllMocks();
-  delete process.env['BAB_NO_TELEMETRY'];
-  delete process.env['BAB_CACHE_DIR'];
+  delete process.env['ULM_NO_TELEMETRY'];
+  delete process.env['ULM_CACHE_DIR'];
   _setDevMode(false);
   try {
     await fsp.rm(tmpDir, { recursive: true, force: true });
@@ -41,8 +41,8 @@ describe('emit', () => {
     expect(elapsed).toBeLessThan(5); // well under 1ms threshold; allow some overhead
   });
 
-  it('BAB_NO_TELEMETRY blocks all emit', () => {
-    process.env['BAB_NO_TELEMETRY'] = '1';
+  it('ULM_NO_TELEMETRY blocks all emit', () => {
+    process.env['ULM_NO_TELEMETRY'] = '1';
     // Should return without doing anything
     expect(() => emit('run_start', { provider: 'claude' })).not.toThrow();
   });
@@ -76,20 +76,20 @@ describe('emit', () => {
 
 describe('disable', () => {
   it('sets enabled=false in state', async () => {
-    process.env['BAB_CACHE_DIR'] = path.join(tmpDir, 'cache');
+    process.env['ULM_CACHE_DIR'] = path.join(tmpDir, 'cache');
     await stateStore.saveWithLock(s => { s.telemetry.enabled = true; });
     await disable(stateStore);
     expect(stateStore.data.telemetry.enabled).toBe(false);
   });
 
   it('sets mode=off in state', async () => {
-    process.env['BAB_CACHE_DIR'] = path.join(tmpDir, 'cache');
+    process.env['ULM_CACHE_DIR'] = path.join(tmpDir, 'cache');
     await disable(stateStore);
     expect(stateStore.data.telemetry.mode).toBe('off');
   });
 
   it('zeroes anon_id', async () => {
-    process.env['BAB_CACHE_DIR'] = path.join(tmpDir, 'cache');
+    process.env['ULM_CACHE_DIR'] = path.join(tmpDir, 'cache');
     await disable(stateStore);
     expect(stateStore.data.telemetry.anon_id).toBe('');
   });

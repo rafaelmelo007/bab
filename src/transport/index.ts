@@ -67,7 +67,7 @@ export class ExecTransport implements ProviderTransport {
     this._cancelled = false;
 
     const timeoutMs = opts?.timeoutMs
-      ?? (process.env['BAB_TURN_TIMEOUT'] ? parseInt(process.env['BAB_TURN_TIMEOUT'], 10) * 1000 : 60_000);
+      ?? (process.env['ULM_TURN_TIMEOUT'] ? parseInt(process.env['ULM_TURN_TIMEOUT'], 10) * 1000 : 60_000);
 
     const args = [...this._extraArgs];
     if (sessionId) {

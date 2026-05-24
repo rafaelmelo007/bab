@@ -6,14 +6,14 @@
 **Touches:** [src/commands/**]
 **Prototype:** N/A
 **Agents:** backend-lead, ux-specialist, testing-lead
-**Source:** docs/prds/2026-05-23-bab.md §6 — F-06; §4.5, §4.7, §4.9, §4.9.2, §4.8
+**Source:** docs/prds/2026-05-23-ulm.md §6 — F-06; §4.5, §4.7, §4.9, §4.9.2, §4.8
 **Last updated:** 2026-05-23
 
 ---
 
 ## §1 Problem Statement
 
-bab's UX is built on ten slash commands (G-04 cap of 12) — `/provider`, `/providers`, `/new`, `/sessions`, `/resume`, `/model`, `/clear`, `/help`, `/exit`, plus implicit Ctrl-D. This feature owns the parsing and dispatch layer: tokenizes a line that starts with `/`, looks up the handler, surfaces an "unknown command" with a Levenshtein-≤-2 hint per §4.7, and renders `/help` and `/providers` byte-exact per §4.9 / §4.9.2. The dispatch table is a load-bearing API between F-02, F-05, F-06, F-08 — pinned in [INTERFACE-CONTRACTS.md](./INTERFACE-CONTRACTS.md).
+ulm's UX is built on ten slash commands (G-04 cap of 12) — `/provider`, `/providers`, `/new`, `/sessions`, `/resume`, `/model`, `/clear`, `/help`, `/exit`, plus implicit Ctrl-D. This feature owns the parsing and dispatch layer: tokenizes a line that starts with `/`, looks up the handler, surfaces an "unknown command" with a Levenshtein-≤-2 hint per §4.7, and renders `/help` and `/providers` byte-exact per §4.9 / §4.9.2. The dispatch table is a load-bearing API between F-02, F-05, F-06, F-08 — pinned in [INTERFACE-CONTRACTS.md](./INTERFACE-CONTRACTS.md).
 
 ## §2 Scope
 
@@ -34,7 +34,7 @@ bab's UX is built on ten slash commands (G-04 cap of 12) — `/provider`, `/prov
 - REPL loop, prompt prefix, line editing — F-01.
 - Session-management bodies (`/new`, `/sessions`, `/resume`) — F-05 (this feature dispatches, F-05 implements).
 - Provider transport invocation — F-02.
-- Error catalog formatting — F-08 (this feature throws `BabError` subclasses, F-08 formats).
+- Error catalog formatting — F-08 (this feature throws `UlmError` subclasses, F-08 formats).
 - Tab completion (§4.7 explicit v2 candidate; DEF-01).
 - `/feedback` and `/pipe` v2 candidates (DEF-02).
 - i18n / localization (DEF-03).
@@ -100,7 +100,7 @@ Dispatch table signature is pinned in [INTERFACE-CONTRACTS.md](./INTERFACE-CONTR
 
 ## §8 Cross-References
 
-- **PRD:** docs/prds/2026-05-23-bab.md §6 — F-06; §4.5, §4.7, §4.9, §4.9.2
+- **PRD:** docs/prds/2026-05-23-ulm.md §6 — F-06; §4.5, §4.7, §4.9, §4.9.2
 - **Decisions:** [DECISIONS.md](./DECISIONS.md)
 - **Interface Contracts:** [INTERFACE-CONTRACTS.md](./INTERFACE-CONTRACTS.md)
 - **Tasks:** [TASKS.md](./TASKS.md)
@@ -111,7 +111,7 @@ Dispatch table signature is pinned in [INTERFACE-CONTRACTS.md](./INTERFACE-CONTR
 | # | Question | Owner | Status | Resolution |
 |---|----------|-------|--------|------------|
 | Q-01 | Levenshtein library — `fastest-levenshtein` vs `js-levenshtein` vs hand-rolled? | backend-lead | Resolved (2026-05-23) | `fastest-levenshtein` (D-01). ~2 KB packed, zero deps, MIT, faster than `js-levenshtein` on short strings. |
-| Q-02 | `/help` fixture file location — feature-local or cross-feature `docs/contracts/`? | prompt-engineer | Open | Promote to `docs/contracts/` if F-07 one-shot-mode reuses for `bab --help`; else feature-local. Resolve at F-07 implementation. |
+| Q-02 | `/help` fixture file location — feature-local or cross-feature `docs/contracts/`? | prompt-engineer | Open | Promote to `docs/contracts/` if F-07 one-shot-mode reuses for `ulm --help`; else feature-local. Resolve at F-07 implementation. |
 
 ## §10 Implementation Notes
 
