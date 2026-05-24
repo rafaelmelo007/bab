@@ -3,99 +3,116 @@
 **Status:** *computed by /vskit:project-status — do not hand-edit (INV-2)*
 **Priority:** High
 **Applies:** []
-**Touches:** [<TBD — populate once code lands, e.g. `src/repl/**`>]
+**Touches:** [src/repl/**]
 **Prototype:** N/A
 **Agents:** backend-lead, ux-specialist, testing-lead
-**Source:** docs/prds/draft/2026-05-23-bab.md §4.1, §4.5
+**Source:** docs/prds/2026-05-23-bab.md §4.1, §4.5, §4.7, §4.8, §4.9, §7.1, §7.3, §7.4
 **Last updated:** 2026-05-23
-**Score:** See SCORE.md
 
 ---
 
 ## §1 Problem Statement
 
-`bab` needs an interactive entry point: typing `bab` should land the user in a persistent REPL where they enter prompts and slash commands until they exit. This feature delivers the shell loop, prompt prefix, and the local-only commands (`/help`, `/clear`, `/exit`). It is the substrate every provider/routing feature plugs into; without it nothing else has a place to run.
+`bab` needs an interactive entry point: typing `bab` should land the user in a persistent REPL where they enter prompts and slash commands until they exit. This feature delivers the shell loop, prompt prefix, line editing, history, signal handling, and the cold-start UX (no-provider error, unknown-command Levenshtein hint, first-run screens). It is the substrate every provider/routing feature plugs into; without it nothing else has a place to run.
 
 ## §2 Scope
 
 ### In Scope
-- Persistent REPL loop: read a line, dispatch, print, loop.
-- Prompt prefix that renders `bab> ` when no provider is selected and `bab (<provider>)> ` once one is set.
-- Line editing with history (up/down arrows, Ctrl-R reverse search) using the host platform's readline equivalent.
-- Local slash commands that do not need a provider: `/help`, `/clear`, `/exit`.
-- `Ctrl-D` and `Ctrl-C` handling — `Ctrl-D` exits cleanly, `Ctrl-C` cancels the current input line.
-- Exit code 0 on clean exit, non-zero on fatal startup error.
+- Persistent REPL loop: read a line, dispatch, print, loop. Built on `node:readline.createInterface` with custom Ctrl-C / Ctrl-D handling (D-02).
+- Prompt prefix rendered by a single pure function `renderPrompt(state)` returning `"bab> "` when no provider is selected and `"bab (<provider>)> "` once one is set.
+- In-memory history (Up/Down arrow recall); **not persisted across restarts** per PRD §4.7 (D-03).
+- Line editing via `node:readline` built-ins (Ctrl-A/E line nav, Ctrl-W word kill, Ctrl-U line kill, Ctrl-K kill-to-EOL); Alt-←/→ word jump where the terminal supports it.
+- Cold-start surfaces (no provider yet): the §4.8 `NoProvider` error per AC-02 wording; first-run screens per PRD §4.7 (both ≥1-detected and zero-detected variants).
+- `Ctrl-D` semantics (D-04): empty buffer → exit 0; non-empty buffer → silently ignored.
+- `Ctrl-C` semantics (D-05): single press → cancel current input line (print `^C`, discard buffer, reprompt); second within 1 s → exit 130.
+- SIGWINCH (Unix) / Windows console resize → full prompt re-render via `readline.cursorTo` + redraw; long lines wrap.
+- `NO_COLOR` / `FORCE_COLOR` / `--no-color` honored; UTF-8 glyphs degrade to ASCII per §4.7.
+- Startup p95 ≤ 80 ms (PRD §7.1) — enforced via tinybench gate; achieved via lazy imports of F-02/F-05.
 
 ### Out of Scope
-- Provider dispatch and routing commands (`/provider`, `/providers`, `/model`, `/new`, `/sessions`, `/resume`). Lives in `provider-routing` feature.
-- Provider transport (ACP / `-p` / HTTP). Lives in per-provider features (`provider-claude`, `provider-codex`, `provider-gemini`, `provider-ollama`).
-- One-shot mode (`bab -p <provider> "<prompt>"`). Separate feature `oneshot-mode`.
-- Daemon mode. Out of scope for v1 entirely (PRD §6.5).
+- Provider dispatch and routing commands (`/provider`, `/providers`, `/model`, `/new`, `/sessions`, `/resume`) — owned by F-06 (parsing) + F-02 / F-05 (handlers).
+- Provider transport (ACP / `-p` / HTTP) — F-02.
+- One-shot mode (`bab -p <provider> "<prompt>"`) — F-07.
+- Daemon mode (PRD §9, v2).
 - Conversation history rendering, markdown reflow, syntax highlighting — output is streamed verbatim from providers.
+- Mid-stream Ctrl-C subprocess cancellation — owned by F-02; this feature only handles idle-prompt Ctrl-C.
+- Tab completion (v2 candidate per PRD §4.7).
+- Persistent history across restarts (DEF-01).
 
 ## §3 Acceptance Criteria
 
-> Each AC must be independently verifiable. Mark `[x]` when test passes.
-
-- [ ] AC-01: Running `bab` with no arguments enters a REPL and prints the prompt `bab> ` on stdout.
-- [ ] AC-02: When no provider is selected, plain text input (anything not starting with `/`) prints a clear error: `no provider selected — try /provider <name>` and re-prompts.
-- [ ] AC-03: `/help` prints the list of available slash commands and re-prompts. Output includes at minimum: `/help`, `/clear`, `/exit`.
-- [ ] AC-04: `/clear` clears the visible terminal buffer (equivalent to `clear` / `Ctrl-L`) and re-prompts.
-- [ ] AC-05: `/exit` exits the REPL with status code 0.
-- [ ] AC-06: `Ctrl-D` on an empty prompt exits with status code 0. On a non-empty prompt, `Ctrl-D` is ignored.
-- [ ] AC-07: `Ctrl-C` cancels the current input line (prints `^C`, discards the buffer, re-prompts). It does not exit the REPL.
-- [ ] AC-08: Up-arrow recalls the previous command from history; history persists across REPL invocations under the platform conventions for the chosen implementation language.
-- [ ] AC-09: An unknown slash command (e.g. `/foo`) prints `unknown command: /foo — try /help` and re-prompts. Does not exit.
+- [ ] AC-01: Running `bab` with no arguments and an existing `state.toml` enters a REPL and prints `bab> ` on stdout (no provider state).
+- [ ] AC-02: When no provider is selected, plain text input (anything not starting with `/`) prints exactly `✗ no provider selected. Run: /provider <name>` (PRD §4.7 / F-08 `NoProvider`), no subprocess is invoked, and the REPL re-prompts.
+- [ ] AC-03: `/help` prints the verbatim §4.9 block (from `tests/fixtures/help_output.txt`, owned by F-06 D-02), terminated by exactly one newline before the next prompt. Snapshot-tested via vitest.
+- [ ] AC-04: `/clear` emits ANSI `\x1B[2J\x1B[H` on UTF-8 / modern terminals; emits nothing when `NO_COLOR` is set OR stdout is not a TTY; never invokes a subprocess.
+- [ ] AC-05: `/exit` exits the process with status code 0 within 50 ms (no in-flight subprocesses in this feature; F-02 owns subprocess cleanup hooks).
+- [ ] AC-06: `Ctrl-D` on an empty input buffer exits with status 0. `Ctrl-D` on a non-empty buffer is consumed silently — buffer and cursor unchanged, no `^D` echoed, no re-prompt.
+- [ ] AC-07: First `Ctrl-C` mid-line discards the buffer, prints `^C\n`, re-prompts on a new line; second `Ctrl-C` within 1000 ms of the first exits with status 130 (§4.7 double-Ctrl-C; mid-stream cancellation lives in F-02 — this AC covers idle-prompt path only).
+- [ ] AC-08: Up-arrow recalls the previous prompt within the current REPL session; Down-arrow walks forward; history is **in-memory only, not persisted across restarts** (PRD §4.7). Confirmed by relaunching bab between two prompts and asserting Up-arrow returns the new session's empty history.
+- [ ] AC-09: Unknown slash command `/foo` prints exactly `✗ unknown command: /foo. Try /help.` followed, on a new line iff a known command at Levenshtein ≤ 2 exists, by `Did you mean /<closest>?` (tie-break by F-06 `HELP_ORDER` index). Dispatch + suggestion are F-06's job; this feature only routes the input to the dispatcher and prints the result.
+- [ ] AC-10: Prompt prefix is rendered by a single pure function `renderPrompt(state) → string` returning `"bab> "` when `state.activeProvider === undefined` and `"bab (<name>)> "` otherwise. No ANSI escapes in the prompt string when `NO_COLOR` is set or stdout is non-TTY.
+- [ ] AC-11: SIGWINCH (Unix) / `process.stdout.on('resize')` (Windows) triggers a full prompt re-render via readline; long input lines wrap rather than truncate. Cursor position remains correct after resize.
+- [ ] AC-12: REPL startup p95 ≤ 80 ms on a cached state.toml, measured by `time node bin/bab.mjs </dev/null` over 100 runs on `ubuntu-latest` (matches PRD §7.1 row). Hard gate in `tinybench`.
 
 ## §4 Non-Functional Requirements
 
 | Dimension | Requirement |
 |-----------|-------------|
-| Latency (p95) | Prompt re-display < 20 ms after a local command on an idle machine |
-| Error budget | N/A — interactive shell, not a service |
-| Browser support | N/A — terminal app |
-| Quota enforcement | N/A |
-| Accessibility | Prompt renders on a screen reader without ANSI escape garbage; respects `NO_COLOR` env var |
-| Security | No subprocess execution in this feature (provider features add that). No file reads beyond the history file under the user's config dir |
+| Latency (p95) | REPL startup ≤ 80 ms p95 on cached state (`ubuntu-latest`); prompt re-display ≤ 10 ms after a local command. Tight under Node baseline (~30–60 ms); requires lazy imports + `node --no-warnings`. |
+| Accessibility | Honors `NO_COLOR`, `FORCE_COLOR`, `--no-color`. UTF-8 glyphs auto-fallback to ASCII when `LANG`/`LC_ALL` lacks UTF-8 or legacy Windows console detected. No information conveyed by color alone. |
+| Cross-platform | Node `^20.10 \|\| ^22 \|\| ^24` per PRD §7.4. Linux glibc ≥ 2.28, macOS 12+, Windows 10 1809+. Config dir via F-04. Ctrl-C uses `SIGINT` (Unix) / `readline`'s `SIGINT` event (Windows). |
+| Security | No subprocess execution in this feature. History stays in-memory in v1 — no on-disk history file (PRD §4.7 explicit). state.toml read is delegated to F-04. |
+| Testability | All TTY-affecting behavior testable under `node-pty` harness; snapshot tests for static strings via vitest. |
+| Portability | Pure JS — `node:readline` built-in. Runs on Node `^20.10 \|\| ^22 \|\| ^24`. |
 
 ## §5 Data Model
 
-> Not applicable — `Applies` does not include `dbschema`.
+> Not applicable — REPL state is in-memory only.
 
 ## §6 Interface Contracts
 
-> Not applicable — `Applies` does not include `interface-contracts`. The "interface" here is stdin/stdout and signal handling, captured in §3 ACs directly.
+> Not applicable — the interface here is stdin/stdout and signal handling, captured in §3 ACs directly.
 
 ## §7 Test Specification
 
 | ID | Type | Description | Assertion |
 |----|------|-------------|-----------|
-| TC-01 | Unit | Prompt prefix renderer with no provider | Returns exactly `bab> ` |
-| TC-02 | Unit | Prompt prefix renderer with provider=claude | Returns exactly `bab (claude)> ` |
-| TC-03 | Unit | Slash command dispatcher: `/help`, `/clear`, `/exit`, unknown | Each returns the documented action; unknown returns an error result, not a crash |
-| TC-04 | Integration | Spawn the REPL via a pty harness, send `/help\n` then `/exit\n` | Stdout contains the command list; process exits 0 |
-| TC-05 | Integration | Spawn the REPL, send Ctrl-C mid-line, then `/exit` | Buffer is discarded; `^C` is printed; final exit is 0 |
-| TC-06 | Integration | Spawn REPL, type plain text without provider, observe error | Error text matches AC-02 verbatim; process still alive |
+| TC-01 | Unit | `renderPrompt(undefined)` / `renderPrompt("claude")` | Returns `"bab> "` / `"bab (claude)> "` exactly |
+| TC-02 | Snapshot (vitest) | `/help` byte-equality | `expect(out).toMatchSnapshot()` matches PRD §4.9 verbatim block via the shared `tests/fixtures/help_output.txt` |
+| TC-03 | Snapshot | `NoProvider` error string | Output equals `"✗ no provider selected. Run: /provider <name>\n"` |
+| TC-04 | node-pty | Unknown command Levenshtein-1 | Send `/hep\n` → output contains `unknown command: /hep` then `Did you mean /help?` on next line |
+| TC-05 | node-pty | Unknown command no suggestion | Send `/xyzzy\n` → contains `unknown command: /xyzzy` and does NOT contain `Did you mean` |
+| TC-06 | node-pty | Ctrl-D on empty | Send raw `\x04` at fresh prompt → process exits 0 within 100 ms |
+| TC-07 | node-pty | Ctrl-D on non-empty | Send `foo`, then `\x04` → buffer retained, no exit; follow with `\n` (without provider) → `NoProvider` fires |
+| TC-08 | node-pty | Double Ctrl-C exit | Send `partial`, `\x03`, `\x03` within 500 ms → exit code 130 |
+| TC-09 | node-pty | Single Ctrl-C cancel | Send `partial`, `\x03`, wait 1100 ms, `/exit\n` → exit 0; output contained `^C` after `partial` |
+| TC-10 | node-pty | `NO_COLOR` strips ANSI from `/clear` | With `NO_COLOR=1`, send `/clear\n` → no `\x1B[2J` bytes in stdout |
+| TC-11 | Bench (tinybench) | REPL startup p95 | 1000 iterations of `node bin/bab.mjs </dev/null` ≤ 80 ms p95 on ubuntu-latest |
+| TC-12 | node-pty | SIGWINCH re-render | Resize tty mid-prompt → prompt re-rendered at new width, cursor at correct column |
+| TC-13 | Snapshot | First-run zero-providers screen | Output matches PRD §4.7 "No providers found" block verbatim |
 
 ## §8 Cross-References
 
-- **PRD:** docs/prds/draft/2026-05-23-bab.md §4.1 (Launch), §4.5 (Slash commands table)
+- **PRD:** docs/prds/2026-05-23-bab.md §4.1 (Launch), §4.5 (Slash commands), §4.7 (UX baseline), §4.8 (error catalog), §4.9 (/help)
 - **Decisions:** [DECISIONS.md](./DECISIONS.md)
 - **Tasks:** [TASKS.md](./TASKS.md)
-- **Blocked-by:** []
+- **Blocked-by:** [state-store, provider-discovery, slash-commands, error-surfaces]
 
 ## §9 Open Questions
 
 | # | Question | Owner | Status | Resolution |
 |---|----------|-------|--------|------------|
-| Q-01 | Implementation language (Rust / Go / Python)? | backend-lead | Open | Lean Rust per PRD §6 Q6; decide before T-01 starts |
-| Q-02 | Which readline library? `rustyline` (Rust) / `liner` / `linenoise` / `prompt_toolkit` (Python) | backend-lead | Open | Depends on Q-01 |
-| Q-03 | Where does history live? `~/.config/bab/history` vs platform-specific dirs (XDG / `%APPDATA%`) | backend-lead | Open | Likely follow `directories`/`dirs` crate conventions; defer until Q-01 resolved |
-| Q-04 | Should `/clear` use ANSI `ESC[2J` or the platform's `clear` syscall equivalent? | ux-specialist | Open | ANSI works on Windows Terminal + macOS + Linux modern terminals; pick that unless we find a real exception |
+| Q-01 | Implementation language (Rust / Go / Python / Node) | backend-lead | Resolved (2026-05-23) | Node.js per PRD §13 Q-06 (post-promotion flip) |
+| Q-02 | Readline library | backend-lead | Resolved (2026-05-23) | Built-in `node:readline` per D-02; no external dep needed |
+| Q-03 | History persistence | backend-lead | Resolved (2026-05-23) | In-memory only in v1 per PRD §4.7 (D-03); persistent across-restart is DEF-01 |
+| Q-04 | `/clear` mechanism | ux-specialist | Resolved (2026-05-23) | ANSI `\x1B[2J\x1B[H`, suppressed under NO_COLOR / non-TTY (D-06) |
+| Q-05 | How does the REPL receive "current provider" state from F-04 and stay consistent if a parallel one-shot writes? | backend-lead | Open | Re-read state.toml on every dispatch (cheap — F-04 NFR ≤ 5 ms p95) is simplest. Resolve before T-01. |
+| Q-06 | On Windows legacy console, does `node:readline` correctly receive `SIGINT` from `CTRL_C_EVENT`? | backend-lead | Open | Verify via node-pty harness on `windows-latest` before AC-07 ships. |
 
 ## §10 Implementation Notes
 
-- The REPL must not depend on any provider being installed. AC-02's "no provider selected" path is the cold-start experience.
-- Signal handling on Windows differs from Unix; the `Ctrl-C cancels line, Ctrl-D exits` semantics must be tested under both pty harnesses.
-- The prompt prefix is intentionally derived from a single function (`render_prompt(state)`) so `provider-routing` can change state and the REPL re-reads it on next iteration — no event bus needed for v1.
-- History file format should be append-only line-based plaintext so a user can `tail` or `grep` it.
+- The REPL must not depend on any provider being installed. AC-02's no-provider path is the cold-start experience.
+- Signal handling on Windows differs from Unix; `node:readline` normalizes `SIGINT` events across platforms, but `tree-kill` semantics (F-02) for child processes still differ — handled in F-02, not here.
+- The prompt prefix is intentionally derived from a single function (`renderPrompt(state)`) so F-02 / F-05 can update state and the REPL re-reads it on next iteration — no event bus needed for v1.
+- History is in-memory only via `readline`'s built-in `historySize` option. PRD §4.7 explicit non-persistence simplifies cross-platform behavior.
+- Lazy imports for AC-12 startup budget: import F-02 / F-05 handler modules from inside dispatch callbacks, not at top-level. Verified by `node --trace-warnings bin/bab.mjs </dev/null` showing F-02 / F-05 not loaded until first dispatch.
