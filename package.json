@@ -26,7 +26,7 @@
   },
   "dependencies": {
     "@iarna/toml": "^3.0.0",
-    "commander": "^12.0.0",
+    "commander": "^14.0.3",
     "fastest-levenshtein": "^1.0.0",
     "proper-lockfile": "^4.0.0",
     "tree-kill": "^1.0.0"
