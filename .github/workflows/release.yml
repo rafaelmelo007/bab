@@ -51,14 +51,15 @@ jobs:
           cache: npm
       # T-16: lockfile gate — AC-09
       - name: Assert lockfileVersion >= 3
-        run: node -e "
-          const lock = JSON.parse(require('fs').readFileSync('package-lock.json','utf8'));
-          if (!lock.lockfileVersion || lock.lockfileVersion < 3) {
-            console.error('lockfileVersion must be >= 3, got: ' + lock.lockfileVersion);
-            process.exit(1);
-          }
-          console.log('lockfileVersion ok: ' + lock.lockfileVersion);
-        "
+        run: |
+          node -e '
+            const lock = JSON.parse(require("fs").readFileSync("package-lock.json","utf8"));
+            if (!lock.lockfileVersion || lock.lockfileVersion < 3) {
+              console.error("lockfileVersion must be >= 3, got: " + lock.lockfileVersion);
+              process.exit(1);
+            }
+            console.log("lockfileVersion ok: " + lock.lockfileVersion);
+          '
       - run: npm ci --ignore-scripts
       # T-12: npm audit gate — AC-07
       - name: npm audit (Moderate+ blocking)
