@@ -1,0 +1,14 @@
+bab — unified CLI gateway to Claude, Codex, Gemini, and Ollama
+
+Commands:
+  /help                Show this help message
+  /provider <name>     Set the active provider (claude, codex, gemini, ollama)
+  /providers           List all discovered providers and their status
+  /model <name>        Set the model for the active provider
+  /sessions            List saved sessions for the active provider
+  /resume <id>         Resume a saved session by ID
+  /new                 Start a new session (clears current session ID)
+  /clear               Clear the screen
+  /exit                Exit bab
+
+Type any non-command text to send a prompt to the active provider.
