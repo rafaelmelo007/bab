@@ -188,11 +188,11 @@ export class HttpTimeout extends UlmError {
 
 export class InvalidProvider extends UlmError {
   readonly code = 'E-INVALID-PROVIDER' as const;
-  constructor(private readonly name: string) {
-    super(`unknown provider '${name}'. Valid: claude, codex, gemini, ollama`);
+  constructor(private readonly providerName: string) {
+    super(`unknown provider '${providerName}'. Valid: claude, codex, gemini, ollama`);
   }
   messageText(): string {
-    return `unknown provider '${this.name}'. Valid: claude, codex, gemini, ollama`;
+    return `unknown provider '${this.providerName}'. Valid: claude, codex, gemini, ollama`;
   }
   exitCode(): number { return 2; }
   isWarning(): boolean { return false; }

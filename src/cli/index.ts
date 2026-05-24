@@ -38,14 +38,14 @@ export async function main(argv: string[] = process.argv): Promise<number> {
     return runOneShot({
       provider: opts.provider,
       positionalArgs: args,
-      noColor: opts.noColor,
-      model: opts.model,
+      ...(opts.noColor !== undefined && { noColor: opts.noColor }),
+      ...(opts.model !== undefined && { model: opts.model }),
     });
   } else {
     // REPL mode
     return runRepl({
-      noColor: opts.noColor,
-      model: opts.model,
+      ...(opts.noColor !== undefined && { noColor: opts.noColor }),
+      ...(opts.model !== undefined && { model: opts.model }),
     });
   }
 }
