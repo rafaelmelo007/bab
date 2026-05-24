@@ -1,0 +1,29 @@
+# Decisions — Telemetry Opt-In
+
+**Feature:** telemetry-opt-in
+**Source:** /vskit:critique-spec telemetry-opt-in (2026-05-23, self-review via general-purpose agent playing backend-lead + security-specialist + devops-lead + testing-lead + prompt-engineer lenses); Node.js retrofit 2026-05-23 after PRD §13 Q-06 flipped Rust → Node.js.
+**Last updated:** 2026-05-23
+
+## Decision Log
+
+| ID | Date | Raised by | Question | Decision | Rationale | Updates | Supersedes |
+|----|------|-----------|----------|----------|-----------|---------|------------|
+| D-01 | 2026-05-23 | backend-lead | Anon ID encoding (hex vs base64 vs UUIDv4) | 32-char lowercase hex of 128 random bits from `node:crypto.randomBytes(16).toString('hex')` | Hex is fixed-length, regex-friendly, copy-paste-safe in terminals. UUIDv4 leaks version bits (4 fixed bits) reducing entropy and visually implying a v4 UUID which it is not. base64 has URL-unsafe characters. Built-in (no `uuid` dep needed). | INTERFACE-CONTRACTS Endpoint payload schema; AC-01 | — |
+| D-02 | 2026-05-23 | backend-lead | Retry backoff schedule | 3 attempts at 250 ms / 1 s / 4 s per event, then park in local cache for next drain trigger | Exponential keeps endpoint outage from amplifying traffic; 3 attempts caps per-event work; remaining failures move to cache where the §10.3 24h drain SLO takes over | SPEC §4 Quota enforcement; AC-13 | — |
+| D-03 | 2026-05-23 | devops-lead | Local-cache file size cap | 5 MB FIFO trim, oldest events first; trim recorded only to worklog, not as a telemetry event | At ~100 B/event, 5 MB ≈ 50k events — generous for offline laptops, hard ceiling against runaway disk use; trim-as-telemetry would create infinite loops on persistent endpoint failure | SPEC §4 Error budget | — |
+| D-04 | 2026-05-23 | security-specialist | Endpoint URL is build-time constant, not runtime config | Hard-coded per release as `export const TELEMETRY_URL: \`https://${string}\` = "..."` in `src/telemetry/endpoint.ts`; no env-var override | A runtime override is an exfiltration vector (env-injected URL captures every event including future fields). Build-time constant is auditable in the released bundle (`grep TELEMETRY_URL bin/bab.mjs`). TypeScript narrow type prevents accidental `http://`. | INTERFACE-CONTRACTS Endpoint config; §7.2-aligned | — |
+| D-05 | 2026-05-23 | devops-lead | OS string for unsupported platforms (FreeBSD, OpenBSD, illumos) | Emit `"linux"` and log a worklog entry; do not refuse. Detection via `process.platform`. | Refusing telemetry on unsupported OS hides the fact that someone tried; emitting honestly with closest-match keeps signal while documenting the lie in worklog. Revisit when first non-`linux/macos/windows` event arrives at the endpoint. | INTERFACE-CONTRACTS `os` allowed values | — |
+| D-06 | 2026-05-23 | security-specialist | Forbidden-fields enforcement: strip-and-continue vs refuse-and-drop | Strip unknown keys, log once at WARN, continue with allowed subset | Refuse-and-drop loses signal on what may be a benign code mistake (added field in `turn_complete`); strip ensures forbidden content never leaves the process while preserving the timestamp/anon_id/event_name skeleton. The negative corpus test (AC-10) gates against any *content* leakage either way. | AC-09 | — |
+| D-07 | 2026-05-23 | security-specialist | Anon ID rotation memory hygiene | Old ID overwritten with `Buffer.alloc(16).fill(0)` before state.toml rewrite; new ID generated from fresh `randomBytes(16)` | Defense-in-depth: the rotated ID has no legitimate use post-`bab reset`; zeroing prevents core dumps / swap from preserving correlatable past-installs ID alongside the new one. Cheap (≤ 16 bytes). | SPEC §4 Security NFR | — |
+| D-08 | 2026-05-23 | prompt-engineer | `mode` field semantics | Tri-state: `"remote"` / `"local"` / `"off"`; `"off"` equivalent to `enabled = false` and is the canonical disabled state. `enabled` retained for forward-compat with older clients reading the file. | One field with three values is simpler than two booleans (`enabled` + `local_only`) which has an undefined `false`/`true` corner | INTERFACE-CONTRACTS state.toml block | — |
+| D-09 | 2026-05-23 | prompt-engineer | §4.8 error code → event_name format (Q-03) | Underscores: `error_CLI_MISSING`, `error_CLI_UNAUTH`, etc. | JSON keys and metric names conventionally use underscores; `_` is `[a-zA-Z0-9_]+` regex-safe. Hyphens in §4.8 codes converted on emit. | SPEC §9 Q-03 resolved; INTERFACE-CONTRACTS | — |
+
+## Deferred Items
+
+| ID | Item | Why deferred | Revisit when |
+|----|------|--------------|--------------|
+| DEF-01 | Telemetry endpoint hosting (Cloudflare Workers vs self-hosted VPS) | PRD §13 Q-08 is Open; resolution target 2026-07-04. Implementation of F-10 transport is mockable against a local HTTPS endpoint (Verdaccio + self-signed) until Q-08 lands | PRD Q-08 resolved (2026-07-04) |
+| DEF-02 | Crash-reporting transport (custom endpoint vs Sentry) | PRD §13 Q-09 is Open. Sentry's JS SDK (~30 KB minified) is well under G-06 but adds vendor lock-in; leaning custom endpoint sharing F-10 infra | PRD Q-09 resolved (2026-07-04) |
+| DEF-03 | Symbolication of `crash` event stack traces | Q-09-adjacent; requires the chosen transport to support attachment-like blobs. v1 ships `crash` events with no stack data (the §10.1 crash-free rate signal works on count alone) | After DEF-02 lands |
+| DEF-04 | Endpoint-side analytics dashboard | Out-of-scope for F-10 (this feature implements the client). Cloudflare Worker analytics or a tiny Grafana view ships separately | After DEF-01 lands; v2 |
+| DEF-05 | Telemetry schema versioning | v1 ships unversioned; the implicit version is the `bab_version` field. A `schema_version` field on the event envelope is added when the first incompatible change is needed | First breaking event-schema change |
