@@ -168,15 +168,19 @@ Idea / User Request
   /vskit:review prd <prd-path>
   ┌──────────────────────────────────────────────────────────────────┐
   │ 11 specialist subagents launched IN PARALLEL — each scores the  │
-  │ PRD independently on their domain (0–9) with written critique.  │
-  │ Any score < 9 → targeted revision → repeat until all ≥ 9.      │
+  │ PRD independently on their domain (0–10) with written critique. │
+  │ Any score < 9 with no waiver → targeted revision → repeat.       │
   │ Scores + key concerns recorded in PRD §Round-Table Scores table │
+  │ When the promotion gate (§3.4) passes, the command itself       │
+  │ `git mv`s the PRD from prds/draft/ to prds/ (staged, uncommitted)│
   └──────────────────────────────────────────────────────────────────┘
        │
-       ▼
-  [product-owner] promotes PRD
-  → docs/prds/<YYYY-MM-DD>-<slug>.md
-  → updates docs/PRD.md (if primary product PRD)
+       ▼ (automatic — no operator step)
+  PRD promoted to docs/prds/<YYYY-MM-DD>-<slug>.md
+  (docs/PRD.md is a separate canonical product-level file; if a repo
+   designates this PRD as the primary product PRD via `Primary: true`
+   in frontmatter, the command also overwrites docs/PRD.md in the
+   same run. Default: no PRD.md write.)
        │
        ▼
   /vskit:prd-to-features <prd-path>
@@ -260,6 +264,9 @@ The PRD owns **portfolio-level** product framing only. Per-feature problem state
 | Date | Round | Min Score | Specialists < 9 | Notes |
 |------|-------|-----------|-----------------|-------|
 
+## Permanent Waivers
+*(Optional. Only present if a specialist's <9 score is honestly waived per §3.5.)*
+
 > Appended by `/vskit:review prd` after every round. Per INV-1, consecutive identical rows (same Min Score AND same Specialists < 9 set) are deduplicated: the most recent row's Date column expands to a range `<first>..<last>`.
 ```
 
@@ -297,6 +304,39 @@ Each of the 11 specialists in §2.1 scores the PRD **0–10** (same scale as fea
 | 7–8 | Substantially addressed; minor gaps named in PRD §13 |
 | 5–6 | Partially addressed; revision required |
 | 0–4 | Not addressed or fundamentally flawed |
+
+### 3.4 Promotion gate — computed, automated (INV-2)
+
+`/vskit:review-prd` evaluates this gate at the end of every round. When it passes, the command **itself** moves the PRD from `docs/prds/draft/` to `docs/prds/` via `git mv` (staged, **never committed** — the operator owns commit timing per the project's git-safety norms). No "now manually promote" step. A manual handoff at this point would violate INV-2: the gate has already decided.
+
+**Gate (PASS requires all):**
+1. The latest round populated every specialist row in `## Round-Table Scores`.
+2. For each specialist, either the latest score is ≥ 9, **or** there is a matching row in the PRD's `## Permanent Waivers` section (§3.5) recorded *before or during* the most recent round.
+3. No specialist's latest score is < 7 — a score below 7 cannot be waived; revise instead.
+
+**On PASS:** the command runs `git mv docs/prds/draft/<file> docs/prds/<file>`, updates the PRD frontmatter `Status:` to `Promoted: <YYYY-MM-DD>`, and prints the new path. If frontmatter contains `Primary: true`, the command also overwrites `docs/PRD.md` with the same content. The move is staged; the operator commits separately.
+
+**On FAIL:** the command surfaces the failing specialists' concrete concerns and either iterates (if rounds remain — cap 5) or stops with a clear "what's missing" message. No move performed.
+
+### 3.5 Permanent Waivers
+
+A specialist lens may be **honestly waived** per INV-3 when the gap cannot be closed without external input the agent does not possess (real user research, vendor TOS reads, license decisions). Waivers are recorded in a top-level PRD section:
+
+```markdown
+## Permanent Waivers
+
+### W-NN — <specialist-slug> — <YYYY-MM-DD> — capped at <score>
+
+**Reason:** <one paragraph naming the §3.3 lens criterion that is structurally unmeetable and why>
+**Falsification path:** <observable signal that would invalidate the waiver — e.g., a §10 adoption metric, a vendor response, a future user research artifact — with the action that follows>
+**Operator decision:** <who approved the waiver and when (one line)>
+```
+
+**Waiver rules:**
+- A waiver is **scoped to one specialist** for one PRD revision; it does not transfer to derived features or other PRDs.
+- A waiver row added retroactively (after a round scored < 9 with no preceding waiver) only counts for the *next* round's gate evaluation, not the round that triggered it. This prevents waivers from being used to whitewash a failed round.
+- Per INV-3, silent waivers are forbidden — a specialist scored < 9 with no waiver row blocks promotion regardless of operator intent.
+- A waiver MUST cite the falsifying signal in observable terms. "We'll fix this later" is not a waiver.
 
 ---
 
@@ -899,7 +939,7 @@ All commands are target-aware. Commands that operate on a specific feature or PR
 
 | Command | Description | Output |
 |---------|-------------|--------|
-| `/vskit:review prd <prd-path>` | 11 parallel subagents score and critique the PRD independently. Iterate until all scores ≥ 9. Appends one row per round to PRD `## Score History`. | Updated PRD §Round-Table Scores + Score History |
+| `/vskit:review prd <prd-path>` | 11 parallel subagents score and critique the PRD independently. Iterate until the §3.4 promotion gate passes (all ≥ 9, or each <9 lens has a §3.5 waiver row). On PASS, `git mv`s the PRD from `prds/draft/` to `prds/` (staged, uncommitted) and writes `Promoted:` into the frontmatter. | Updated PRD §Round-Table Scores + Score History; PRD file moved on PASS |
 | `/vskit:critique prd <prd-path>` | *(renamed from `/grill-me prd` in v1.6.)* Specialists interrogate the PRD for weak evidence, missing sections, and vague metrics. | Annotated PRD with inline questions; §13 Open Questions updated |
 | `/vskit:prd-to-features <prd-path>` | Extract feature list from PRD, create `docs/features/<slug>/` stub folders for each. | Feature folders with stub SPEC.md, TASKS.md, DBSCHEMA.md, INTERFACE-CONTRACTS.md, SCORE.md, DECISIONS.md |
 
