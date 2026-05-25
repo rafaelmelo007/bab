@@ -94,7 +94,7 @@ jobs:
       # T-08: tarball size gate — AC-03
       - name: Tarball size gate (≤ 2 MB)
         run: node scripts/check-tarball-size.mjs
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: ulm-bundle
           path: bin/ulm.mjs
