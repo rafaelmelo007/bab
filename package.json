@@ -36,7 +36,7 @@
     "@types/proper-lockfile": "^4.1.4",
     "@vitest/coverage-v8": "^1.6.1",
     "esbuild": "latest",
-    "license-checker-rseidelsohn": "^4.0.0",
+    "license-checker-rseidelsohn": "^5.0.1",
     "nock": "^13.0.0",
     "node-pty": "^1.0.0",
     "tinybench": "^2.0.0",
